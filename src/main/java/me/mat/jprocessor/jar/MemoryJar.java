@@ -3,7 +3,6 @@ package me.mat.jprocessor.jar;
 import me.mat.jprocessor.JProcessor;
 import me.mat.jprocessor.jar.cls.MemoryClass;
 import me.mat.jprocessor.mappings.MappingManager;
-import me.mat.jprocessor.mappings.mapping.MethodMapping;
 import me.mat.jprocessor.util.JarUtil;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.ClassRemapper;
@@ -14,7 +13,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.jar.JarOutputStream;
 
@@ -52,6 +50,13 @@ public class MemoryJar {
         // build the class hierarchy
         classes.forEach((className, memoryClass) -> memoryClass.findOverrides(memoryClass.superClass));
     }
+
+    /**
+     * Remaps the classes in memory based
+     * on the mappings from the mapping manager
+     *
+     * @param mappingManager mappings that you want to use to remap
+     */
 
     public void reMap(MappingManager mappingManager) {
         SimpleRemapper remapper = new SimpleRemapper(mappingManager.getMappings());
