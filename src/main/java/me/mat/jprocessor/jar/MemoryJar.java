@@ -2,14 +2,19 @@ package me.mat.jprocessor.jar;
 
 import me.mat.jprocessor.JProcessor;
 import me.mat.jprocessor.jar.cls.MemoryClass;
+import me.mat.jprocessor.mappings.MappingManager;
+import me.mat.jprocessor.mappings.mapping.MethodMapping;
 import me.mat.jprocessor.util.JarUtil;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.commons.ClassRemapper;
+import org.objectweb.asm.commons.SimpleRemapper;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.jar.JarOutputStream;
 
@@ -46,6 +51,17 @@ public class MemoryJar {
 
         // build the class hierarchy
         classes.forEach((className, memoryClass) -> memoryClass.findOverrides(memoryClass.superClass));
+    }
+
+    public void reMap(MappingManager mappingManager) {
+        SimpleRemapper remapper = new SimpleRemapper(mappingManager.getMappings());
+        classes.forEach((className, memoryClass) -> {
+            ClassNode mappedNode = new ClassNode();
+            ClassRemapper adapter = new ClassRemapper(mappedNode, remapper);
+
+            memoryClass.classNode.accept(adapter);
+            memoryClass.classNode = mappedNode;
+        });
     }
 
     /**
@@ -114,7 +130,7 @@ public class MemoryJar {
             // alert the user that classes are being written
             JProcessor.Logging.info("Writing %d classes...", classes.size());
 
-            // loop through all the class nodes
+            // loop through all the class nodes and write them to the stream
             classes.forEach((name, memoryClass) -> memoryClass.write(out));
 
             // alert the user that classes are finished writing

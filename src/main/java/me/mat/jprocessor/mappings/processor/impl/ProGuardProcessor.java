@@ -22,6 +22,8 @@ public class ProGuardProcessor implements MappingProcessor {
         if (line.startsWith("#")) {
             return;
         }
+
+        line = line.replaceAll("\\.", "/");
         if (!line.startsWith(TAB)) {
             String[] data = line.split(DELIMITER);
             mappingManager.mapClass(data[0], data[1].substring(0, data[1].length() - 1));
@@ -108,7 +110,6 @@ public class ProGuardProcessor implements MappingProcessor {
         methodMappings.forEach((className, mappings) -> mappings.forEach(methodMapping -> {
             methodMapping.description = buildDescription(methodMapping.description, methodMapping.returnType);
             methodMapping.mappedDescription = buildDescription(methodMapping.mappedDescription, methodMapping.mappedReturnType);
-            System.out.println(methodMapping.description);
         }));
     }
 

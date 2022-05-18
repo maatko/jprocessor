@@ -11,7 +11,7 @@ public class MemoryMethod {
     @NonNull
     public MethodNode methodNode;
 
-    public MemoryMethod originalMethod;
+    public OverrideMethod originalMethod;
 
     /**
      * Checks if this method is an override method from previous parent classes
@@ -38,6 +38,18 @@ public class MemoryMethod {
             return false;
         }
         return ASMUtil.isSameMethod(((MemoryMethod) obj).methodNode, methodNode);
+    }
+
+    public static final class OverrideMethod extends MemoryMethod {
+
+        @NonNull
+        public MemoryClass parentClass;
+
+        public OverrideMethod(@NonNull MemoryClass parentClass, @NonNull MethodNode methodNode) {
+            super(methodNode);
+            this.parentClass = parentClass;
+        }
+
     }
 
 }

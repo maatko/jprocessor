@@ -1,6 +1,9 @@
 package me.mat.jprocessor.mappings;
 
+import lombok.Getter;
 import me.mat.jprocessor.JProcessor;
+import me.mat.jprocessor.jar.cls.MemoryClass;
+import me.mat.jprocessor.jar.cls.MemoryMethod;
 import me.mat.jprocessor.mappings.mapping.FieldMapping;
 import me.mat.jprocessor.mappings.mapping.Mapping;
 import me.mat.jprocessor.mappings.mapping.MethodMapping;
@@ -15,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Getter
 public class MappingManager {
 
     private final Map<String, Mapping> classMappings = new HashMap<>();
@@ -56,6 +60,22 @@ public class MappingManager {
         JProcessor.Logging.info("Loaded '%d' method mappings", methodMappings.size());
     }
 
+    public Mapping cls(MemoryClass memoryClass) {
+        return cls(memoryClass.classNode.name);
+    }
+
+    public Mapping cls(String className) {
+        return classMappings.getOrDefault(className, null);
+    }
+
+    public MethodMapping method(String className, MemoryMethod memoryMethod) {
+        return method(className, memoryMethod.methodNode.name, memoryMethod.methodNode.desc);
+    }
+
+    public MethodMapping method(String className, String mapping, String mappedDescription) {
+        return methodMappings.getOrDefault(className, new ArrayList<>()).stream().filter(mm -> mm.mapping.equals(mapping) && mm.mappedDescription.equals(mappedDescription)).findFirst().orElse(null);
+    }
+
     /**
      * Maps a class by its name and mapping
      *
@@ -66,9 +86,11 @@ public class MappingManager {
     public void mapClass(String name, String mapping) {
         currentClass = mapping;
 
-        Mapping currentMapping = new Mapping(name, mapping);
-        classMappings.put(mapping, currentMapping);
-        reverseClassMappings.put(name, currentMapping);
+        if (!classMappings.containsKey(mapping)) {
+            Mapping currentMapping = new Mapping(name, mapping);
+            classMappings.put(mapping, currentMapping);
+            reverseClassMappings.put(name, currentMapping);
+        }
     }
 
     /**
@@ -101,6 +123,25 @@ public class MappingManager {
         List<MethodMapping> mappings = methodMappings.getOrDefault(currentClass, new ArrayList<>());
         mappings.add(new MethodMapping(name, mapping, returnType, description));
         methodMappings.put(currentClass, mappings);
+    }
+
+    /**
+     * Compiled all the mappings that
+     * the SimpleRemapper supports
+     *
+     * @return {@link Map}
+     */
+
+    public Map<String, String> getMappings() {
+        Map<String, String> mappings = new HashMap<>();
+        classMappings.forEach((className, mapping) -> mappings.put(className, mapping.name));
+        fieldMappings.forEach((className, fieldMappings)
+                -> fieldMappings.forEach(mapping
+                -> mappings.put(className + "." + mapping.mapping, mapping.name)));
+        methodMappings.forEach((className, methodMappings)
+                -> methodMappings.forEach(mapping
+                -> mappings.put(className + "." + mapping.mapping + mapping.mappedDescription, mapping.name)));
+        return mappings;
     }
 
 }

@@ -61,7 +61,7 @@ public class MemoryClass {
 
         methods.forEach(memoryMethod
                 -> superClass.methods.stream().filter(memoryMethod::equals).findFirst().ifPresent(mm
-                -> memoryMethod.originalMethod = mm));
+                -> memoryMethod.originalMethod = new MemoryMethod.OverrideMethod(superClass, mm.methodNode)));
 
         findOverrides(superClass.superClass);
     }

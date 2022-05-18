@@ -25,8 +25,10 @@ public class JProcessTest {
 
     private static final File MAPPINGS_FILE = new File("mappings.txt");
 
+    private static final File CLIENT_JAR_FILE = new File("client.jar");
+
     @Test
-    public void runMappingTest() {
+    public void runMappingTest() throws FileNotFoundException, MappingLoadException {
         // check for the json manifest
         if (!MANIFEST_JSON_FILE.exists()) {
             download(MANIFEST_JSON_URL, MANIFEST_JSON_FILE);
@@ -41,12 +43,22 @@ public class JProcessTest {
             download(manifest.downloads.mappings.url, MAPPINGS_FILE);
         }
 
-        // load the mapping file
-        try {
-            MappingManager mappingManager = JProcessor.Mapping.load(MAPPINGS_FILE, MappingType.PROGUARD);
-        } catch (MappingLoadException e) {
-            throw new RuntimeException(e);
+        // if the client jar file does not exist download it
+        if (!CLIENT_JAR_FILE.exists()) {
+            download(manifest.downloads.client.url, CLIENT_JAR_FILE);
         }
+
+        // load the mapping file
+        MappingManager mappingManager = JProcessor.Mapping.load(MAPPINGS_FILE, MappingType.PROGUARD);
+
+        // load the jar into memory
+        MemoryJar memoryJar = JProcessor.Jar.load(CLIENT_JAR_FILE);
+
+        // remap the jar
+        memoryJar.reMap(mappingManager);
+
+        // save the jar to the disk
+        memoryJar.save(new File("client_out.jar"));
     }
 
     @Test
