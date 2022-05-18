@@ -11,11 +11,9 @@ import java.util.Map;
 
 public class MemoryJar {
 
-    private final Map<String, MemoryClass> loadedClasses = new HashMap<>();
+    public final Map<String, MemoryClass> loadedClasses = new HashMap<>();
 
-    private final Map<MemoryClass, MethodNode> overrideMethods = new HashMap<>();
-
-    private final Map<String, MemoryResource> loadedResources = new HashMap<>();
+    public final Map<String, MemoryResource> loadedResources = new HashMap<>();
 
     public MemoryJar(File file) {
         // log to console that the jar's classes are loading into the memory
@@ -43,10 +41,6 @@ public class MemoryJar {
 
         // build the class hierarchy
         loadedClasses.forEach((className, memoryClass) -> memoryClass.findOverrides(memoryClass.superClass));
-    }
-
-    void loadOverrides(MemoryClass memoryClass) {
-
     }
 
 }
