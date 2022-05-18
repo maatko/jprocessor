@@ -1,7 +1,14 @@
 package me.mat.jprocessor.mappings.processor.impl;
 
 import me.mat.jprocessor.mappings.MappingManager;
+import me.mat.jprocessor.mappings.mapping.FieldMapping;
+import me.mat.jprocessor.mappings.mapping.Mapping;
+import me.mat.jprocessor.mappings.mapping.MethodMapping;
 import me.mat.jprocessor.mappings.processor.MappingProcessor;
+import me.mat.jprocessor.util.asm.ASMUtil;
+
+import java.util.List;
+import java.util.Map;
 
 public class ProGuardProcessor implements MappingProcessor {
 
@@ -39,8 +46,58 @@ public class ProGuardProcessor implements MappingProcessor {
     }
 
     @Override
+    public void build(Map<String, Mapping> classMappings, Map<String, Mapping> reverseClassMappings,
+                      Map<String, List<FieldMapping>> fieldMappings, Map<String, List<MethodMapping>> methodMappings) {
+        mapReturnTypes(reverseClassMappings, fieldMappings, methodMappings);
+        mapDescriptions(reverseClassMappings, methodMappings);
+    }
+
+    @Override
     public void manager(MappingManager mappingManager) {
         this.mappingManager = mappingManager;
+    }
+
+    void mapReturnTypes(Map<String, Mapping> reverseClassMappings,
+                        Map<String, List<FieldMapping>> fieldMappings,
+                        Map<String, List<MethodMapping>> methodMappings) {
+        fieldMappings.forEach((className, mappings) -> mappings.forEach(fieldMapping -> {
+            String returnType = fieldMapping.returnType;
+            if (reverseClassMappings.containsKey(returnType)) {
+                fieldMapping.mappedReturnType = reverseClassMappings.get(returnType).mapping;
+            }
+            fieldMapping.returnType = ASMUtil.toByteCodeFromJava(fieldMapping.returnType);
+            fieldMapping.mappedReturnType = ASMUtil.toByteCodeFromJava(fieldMapping.mappedReturnType);
+        }));
+        methodMappings.forEach((className, mappings) -> mappings.forEach(methodMapping -> {
+            String returnType = methodMapping.returnType;
+            if (reverseClassMappings.containsKey(returnType)) {
+                methodMapping.mappedReturnType = reverseClassMappings.get(returnType).mapping;
+            }
+            methodMapping.returnType = ASMUtil.toByteCodeFromJava(methodMapping.returnType);
+            methodMapping.mappedReturnType = ASMUtil.toByteCodeFromJava(methodMapping.mappedReturnType);
+        }));
+    }
+
+    void mapDescriptions(Map<String, Mapping> reverseClassMappings, Map<String, List<MethodMapping>> methodMappings) {
+        methodMappings.forEach((className, mappings) -> mappings.forEach(methodMapping -> {
+            String description = methodMapping.description;
+            if (!description.isEmpty()) {
+                methodMapping.mappedDescription = "";
+                String[] types = description.split(",");
+                for (String type : types) {
+                    if (reverseClassMappings.containsKey(type)) {
+                        methodMapping.mappedDescription += reverseClassMappings.get(type).mapping;
+                        methodMapping.mappedDescription += ",";
+                    }
+                }
+                if (!methodMapping.mappedDescription.isEmpty()) {
+                    methodMapping.mappedDescription = methodMapping.mappedDescription.substring(
+                            0,
+                            methodMapping.mappedDescription.length() - 1
+                    );
+                }
+            }
+        }));
     }
 
 }

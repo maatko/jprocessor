@@ -5,7 +5,6 @@ import me.mat.jprocessor.mappings.mapping.FieldMapping;
 import me.mat.jprocessor.mappings.mapping.Mapping;
 import me.mat.jprocessor.mappings.mapping.MethodMapping;
 import me.mat.jprocessor.mappings.processor.MappingProcessor;
-import me.mat.jprocessor.util.asm.ASMUtil;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -48,15 +47,21 @@ public class MappingManager {
             throw new RuntimeException(e);
         }
 
-        // construct the mapping data
-        this.mapReturnTypes();
-        this.mapDescriptions();
+        // build the mapping data
+        processor.build(classMappings, reverseClassMappings, fieldMappings, methodMappings);
 
         // log the loaded data to the console
         JProcessor.Logging.info("Loaded '%d' class mappings", classMappings.size());
         JProcessor.Logging.info("Loaded '%d' field mappings", fieldMappings.size());
         JProcessor.Logging.info("Loaded '%d' method mappings", methodMappings.size());
     }
+
+    /**
+     * Maps a class by its name and mapping
+     *
+     * @param name    name of the class
+     * @param mapping mapping of the class
+     */
 
     public void mapClass(String name, String mapping) {
         currentClass = mapping;
@@ -66,57 +71,36 @@ public class MappingManager {
         reverseClassMappings.put(name, currentMapping);
     }
 
+    /**
+     * Maps a field to the current class
+     * by its name, mapping and return type
+     *
+     * @param name       name of the field that you want to map
+     * @param mapping    mapping of the field that you want to map
+     * @param returnType return type of the field that you want to map
+     */
+
     public void mapField(String name, String mapping, String returnType) {
         List<FieldMapping> mappings = fieldMappings.getOrDefault(currentClass, new ArrayList<>());
         mappings.add(new FieldMapping(name, mapping, returnType));
         fieldMappings.put(currentClass, mappings);
     }
 
+    /**
+     * Maps a method to the current class
+     * by its name, mapping, return type and
+     * the description
+     *
+     * @param name        name of the method that you want to map
+     * @param mapping     mapping of the method that you want to map
+     * @param returnType  return type of the method that you want to map
+     * @param description description of the method that you want to map
+     */
+
     public void mapMethod(String name, String mapping, String returnType, String description) {
         List<MethodMapping> mappings = methodMappings.getOrDefault(currentClass, new ArrayList<>());
         mappings.add(new MethodMapping(name, mapping, returnType, description));
         methodMappings.put(currentClass, mappings);
-    }
-
-    void mapReturnTypes() {
-        fieldMappings.forEach((className, fieldMappings) -> fieldMappings.forEach(fieldMapping -> {
-            String returnType = fieldMapping.returnType;
-            if (reverseClassMappings.containsKey(returnType)) {
-                fieldMapping.mappedReturnType = reverseClassMappings.get(returnType).mapping;
-            }
-            fieldMapping.returnType = ASMUtil.toByteCodeFromJava(fieldMapping.returnType);
-            fieldMapping.mappedReturnType = ASMUtil.toByteCodeFromJava(fieldMapping.mappedReturnType);
-        }));
-        methodMappings.forEach((className, methodMappings) -> methodMappings.forEach(methodMapping -> {
-            String returnType = methodMapping.returnType;
-            if (reverseClassMappings.containsKey(returnType)) {
-                methodMapping.mappedReturnType = reverseClassMappings.get(returnType).mapping;
-            }
-            methodMapping.returnType = ASMUtil.toByteCodeFromJava(methodMapping.returnType);
-            methodMapping.mappedReturnType = ASMUtil.toByteCodeFromJava(methodMapping.mappedReturnType);
-        }));
-    }
-
-    void mapDescriptions() {
-        methodMappings.forEach((className, methodMappings) -> methodMappings.forEach(methodMapping -> {
-            String description = methodMapping.description;
-            if (!description.isEmpty()) {
-                methodMapping.mappedDescription = "";
-                String[] types = description.split(",");
-                for (String type : types) {
-                    if (reverseClassMappings.containsKey(type)) {
-                        methodMapping.mappedDescription += reverseClassMappings.get(type).mapping;
-                        methodMapping.mappedDescription += ",";
-                    }
-                }
-                if (!methodMapping.mappedDescription.isEmpty()) {
-                    methodMapping.mappedDescription = methodMapping.mappedDescription.substring(
-                            0,
-                            methodMapping.mappedDescription.length() - 1
-                    );
-                }
-            }
-        }));
     }
 
 }
