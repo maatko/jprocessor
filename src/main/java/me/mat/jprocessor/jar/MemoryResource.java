@@ -13,6 +13,14 @@ public class MemoryResource {
     @NonNull
     private byte[] data;
 
+    /**
+     * Writes to contents of the resource
+     * to the JarOutputStream with the provided name
+     *
+     * @param outputStream stream that you want to write to
+     * @param name         name that you want to write the resource as
+     */
+
     public void write(JarOutputStream outputStream, String name) {
         try {
             // load a new entry into the jar

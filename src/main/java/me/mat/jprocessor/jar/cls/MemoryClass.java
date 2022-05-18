@@ -31,6 +31,10 @@ public class MemoryClass {
      */
 
     public void initialize(Map<String, MemoryClass> classes) {
+        // clear all the fields and methods
+        fields.clear();
+        methods.clear();
+
         // load all the fields into the memory
         classNode.fields.forEach(fieldNode -> fields.add(new MemoryField(fieldNode)));
 
@@ -58,6 +62,12 @@ public class MemoryClass {
 
         findOverrides(superClass.superClass);
     }
+
+    /**
+     * Writes the class to the provided JarOutputStream
+     *
+     * @param outputStream stream that you want to write the class to
+     */
 
     public void write(JarOutputStream outputStream) {
         try {
