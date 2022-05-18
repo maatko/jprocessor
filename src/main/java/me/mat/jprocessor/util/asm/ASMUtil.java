@@ -2,6 +2,7 @@ package me.mat.jprocessor.util.asm;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -16,6 +17,19 @@ public class ASMUtil {
      */
 
     public static boolean isSameMethod(MethodNode first, MethodNode second) {
+        return first.name.equals(second.name) && first.desc.equals(second.desc) && first.access == second.access;
+    }
+
+
+    /**
+     * Checks if the provided field nodes are the same
+     *
+     * @param first  first field node that you want to check
+     * @param second second field node that you want to check
+     * @return {@link Boolean}
+     */
+
+    public static boolean isSameField(FieldNode first, FieldNode second) {
         return first.name.equals(second.name) && first.desc.equals(second.desc) && first.access == second.access;
     }
 

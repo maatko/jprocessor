@@ -22,10 +22,14 @@ public class JProcessTest {
         MemoryJar memoryJar = JProcessor.load(TEST_JAR_FILE);
 
         // check that the classes were loaded
-        assert !memoryJar.loadedClasses.isEmpty();
+        assert !memoryJar.classes.isEmpty();
 
         // check that the resources were loaded
-        assert !memoryJar.loadedResources.isEmpty();
+        assert !memoryJar.resources.isEmpty();
+
+        // save the jar to the output file
+        File outputFile = new File("out.jar");
+        memoryJar.save(outputFile);
     }
 
     /**
@@ -35,8 +39,7 @@ public class JProcessTest {
 
     public static void checkJar() {
         if (!TEST_JAR_FILE.exists()) {
-            try (BufferedInputStream in = new BufferedInputStream(new URL(TEST_JAR_URL).openStream());
-                 FileOutputStream fileOutputStream = new FileOutputStream(TEST_JAR_FILE.getAbsolutePath())) {
+            try (BufferedInputStream in = new BufferedInputStream(new URL(TEST_JAR_URL).openStream()); FileOutputStream fileOutputStream = new FileOutputStream(TEST_JAR_FILE.getAbsolutePath())) {
                 byte[] dataBuffer = new byte[1024];
                 int bytesRead;
                 while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
