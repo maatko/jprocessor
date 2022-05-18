@@ -3,6 +3,8 @@ package me.mat.jprocessor.jar;
 import me.mat.jprocessor.JProcessor;
 import me.mat.jprocessor.jar.cls.MemoryClass;
 import me.mat.jprocessor.util.JarUtil;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.ClassNode;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,6 +46,55 @@ public class MemoryJar {
 
         // build the class hierarchy
         classes.forEach((className, memoryClass) -> memoryClass.findOverrides(memoryClass.superClass));
+    }
+
+    /**
+     * Creates a class in the memory
+     * and loads it into the jar
+     *
+     * @param version    version of java that this will target
+     * @param access     access of the class
+     * @param name       name of the class
+     * @param sig        signature of the class
+     * @param superName  name of the parenting class
+     * @param interfaces array of interfaces that the class has
+     * @return {@link MemoryClass}
+     */
+
+    public MemoryClass createClass(int version, int access, String name,
+                                   String sig, String superName, String[] interfaces) {
+        return createClass(Opcodes.ASM9, version, access, name, sig, superName, interfaces);
+    }
+
+    /**
+     * Creates a class in the memory
+     * and loads it into the jar
+     *
+     * @param api        version of the ASM api that you want to use
+     * @param version    version of java that this will target
+     * @param access     access of the class
+     * @param name       name of the class
+     * @param sig        signature of the class
+     * @param superName  name of the parenting class
+     * @param interfaces array of interfaces that the class has
+     * @return {@link MemoryClass}
+     */
+
+    public MemoryClass createClass(int api, int version, int access,
+                                   String name, String sig, String superName,
+                                   String[] interfaces) {
+        ClassNode classNode = new ClassNode(api);
+        classNode.visit(version, access, name, sig, superName, interfaces);
+        classNode.visitSource(name + ".java", null);
+        classNode.visitEnd();
+
+        MemoryClass memoryClass = new MemoryClass(classNode);
+        classes.put(name, memoryClass);
+
+        memoryClass.initialize(classes);
+        memoryClass.findOverrides(memoryClass.superClass);
+
+        return memoryClass;
     }
 
     /**

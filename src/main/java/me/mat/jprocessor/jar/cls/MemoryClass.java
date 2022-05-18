@@ -3,7 +3,10 @@ package me.mat.jprocessor.jar.cls;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.MethodNode;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -61,6 +64,78 @@ public class MemoryClass {
                 -> memoryMethod.originalMethod = mm));
 
         findOverrides(superClass.superClass);
+    }
+
+    /**
+     * Adds a field to the current class in memory
+     *
+     * @param access     access of the field
+     * @param name       name of the field
+     * @param descriptor descriptor of the field
+     * @param signature  signature of the field
+     * @param value      value of the field
+     * @return {@link MemoryField}
+     */
+
+    public MemoryField addField(int access, String name, String descriptor, String signature, Object value) {
+        return addField(Opcodes.ASM9, access, name, descriptor, signature, value);
+    }
+
+    /**
+     * Adds a field to the current class in memory
+     *
+     * @param api        version of the ASM api that you want to use
+     * @param access     access of the field
+     * @param name       name of the field
+     * @param descriptor descriptor of the field
+     * @param signature  signature of the field
+     * @param value      value of the field
+     * @return {@link MemoryField}
+     */
+
+    public MemoryField addField(int api, int access, String name, String descriptor, String signature, Object value) {
+        FieldNode fieldNode = new FieldNode(api, access, name, descriptor, signature, value);
+        classNode.fields.add(fieldNode);
+
+        MemoryField memoryField;
+        fields.add(memoryField = new MemoryField(fieldNode));
+        return memoryField;
+    }
+
+    /**
+     * Adds a method to the current class in memory
+     *
+     * @param access     access of the method
+     * @param name       name of the method
+     * @param descriptor descriptor of the method
+     * @param signature  signature of the method
+     * @param exceptions array of exceptions that this method might throw
+     * @return {@link MemoryMethod}
+     */
+
+    public MemoryMethod addMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+        return addMethod(Opcodes.ASM9, access, name, descriptor, signature, exceptions);
+    }
+
+    /**
+     * Adds a method to the current class in memory
+     *
+     * @param api        version of the ASM api that you want to use
+     * @param access     access of the method
+     * @param name       name of the method
+     * @param descriptor descriptor of the method
+     * @param signature  signature of the method
+     * @param exceptions array of exceptions that this method might throw
+     * @return {@link MemoryMethod}
+     */
+
+    public MemoryMethod addMethod(int api, int access, String name, String descriptor, String signature, String[] exceptions) {
+        MethodNode methodNode = new MethodNode(api, access, name, descriptor, signature, exceptions);
+        classNode.methods.add(methodNode);
+
+        MemoryMethod memoryMethod;
+        methods.add(memoryMethod = new MemoryMethod(methodNode));
+        return memoryMethod;
     }
 
     /**
