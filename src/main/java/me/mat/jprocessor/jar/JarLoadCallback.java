@@ -1,4 +1,4 @@
-package me.mat.jprocessor;
+package me.mat.jprocessor.jar;
 
 import me.mat.jprocessor.jar.MemoryJar;
 

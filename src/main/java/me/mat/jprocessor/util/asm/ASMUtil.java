@@ -33,4 +33,36 @@ public class ASMUtil {
         return first.name.equals(second.name) && first.desc.equals(second.desc) && first.access == second.access;
     }
 
+    /**
+     * Turns a java type into a asm type
+     *
+     * @param type type that you want to convert
+     * @return {@link String}
+     */
+
+    public static String toByteCodeFromJava(String type) {
+        switch (type.toLowerCase()) {
+            case "void":
+                return "V";
+            case "boolean":
+                return "Z";
+            case "byte":
+                return "B";
+            case "char":
+                return "C";
+            case "short":
+                return "S";
+            case "int":
+                return "I";
+            case "long":
+                return "J";
+            case "float":
+                return "F";
+            case "double":
+                return "D";
+            default:
+                return type;
+        }
+    }
+
 }
