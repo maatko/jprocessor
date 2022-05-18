@@ -61,7 +61,7 @@ public class ASMUtil {
             case "double":
                 return "D";
             default:
-                return type;
+                return !type.isEmpty() ? "L" + type + ";" : type;
         }
     }
 

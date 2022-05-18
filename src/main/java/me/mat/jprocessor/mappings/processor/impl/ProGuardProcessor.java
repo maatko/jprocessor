@@ -48,8 +48,12 @@ public class ProGuardProcessor implements MappingProcessor {
     @Override
     public void build(Map<String, Mapping> classMappings, Map<String, Mapping> reverseClassMappings,
                       Map<String, List<FieldMapping>> fieldMappings, Map<String, List<MethodMapping>> methodMappings) {
+        // map all the types and descriptions
         mapReturnTypes(reverseClassMappings, fieldMappings, methodMappings);
         mapDescriptions(reverseClassMappings, methodMappings);
+
+        // build all the descriptions
+        buildDescriptions(methodMappings);
     }
 
     @Override
@@ -98,6 +102,32 @@ public class ProGuardProcessor implements MappingProcessor {
                 }
             }
         }));
+    }
+
+    void buildDescriptions(Map<String, List<MethodMapping>> methodMappings) {
+        methodMappings.forEach((className, mappings) -> mappings.forEach(methodMapping -> {
+            methodMapping.description = buildDescription(methodMapping.description, methodMapping.returnType);
+            methodMapping.mappedDescription = buildDescription(methodMapping.mappedDescription, methodMapping.mappedReturnType);
+            System.out.println(methodMapping.description);
+        }));
+    }
+
+    String buildDescription(String description, String returnType) {
+        boolean hasRan = false;
+        StringBuilder builder = new StringBuilder("(");
+        for (String type : description.split(",")) {
+            String asmType = ASMUtil.toByteCodeFromJava(type);
+            if (hasRan && !builder.toString().endsWith(";") && asmType.startsWith("L")) {
+                builder.append(";");
+                builder.append(asmType);
+            } else {
+                builder.append(asmType);
+            }
+            hasRan = true;
+        }
+        builder.append(")");
+        builder.append(returnType);
+        return builder.toString();
     }
 
 }
