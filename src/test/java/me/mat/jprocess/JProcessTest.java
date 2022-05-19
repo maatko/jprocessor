@@ -27,6 +27,7 @@ public class JProcessTest {
     private static final File TESTS_OUT_JAR_FILE = new File(TESTS_DIRECTORY, "evaluator_out.jar");
     private static final File MAPPINGS_FILE = new File(TESTS_DIRECTORY, "mappings.txt");
     private static final File MAPPINGS_OUT_FILE = new File(TESTS_DIRECTORY, "mappings_out.json");
+    private static final File MAPPINGS_TESTS_OUT_FILE = new File(TESTS_DIRECTORY, "tests_mappings_out.json");
     private static final File CLIENT_JAR_FILE = new File(TESTS_DIRECTORY, "client.jar");
     private static final File CLIENT_OUT_JAR_FILE = new File(TESTS_DIRECTORY, "client_out.jar");
 
@@ -117,6 +118,9 @@ public class JProcessTest {
 
         // save the jar to the output file
         memoryJar.save(TESTS_OUT_JAR_FILE);
+
+        // save the mappings
+        mappingManager.save(MAPPINGS_TESTS_OUT_FILE);
     }
 
     /**

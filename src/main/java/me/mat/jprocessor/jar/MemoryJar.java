@@ -31,6 +31,13 @@ public class MemoryJar {
         // load all the classes into the memory
         JarUtil.load(file).forEach(classNode -> classes.put(classNode.name, new MemoryClass(classNode)));
 
+        // attempt to fix broken inner classes
+        classes.forEach((className, memoryClass) -> {
+            if (memoryClass.isBrokenInnerClass()) {
+                memoryClass.classNode.outerClass = className.split("\\$")[0];
+            }
+        });
+
         // setup the class hierarchy
         classes.forEach((className, memoryClass) -> memoryClass.initialize(classes));
 
@@ -121,6 +128,17 @@ public class MemoryJar {
         memoryClass.findOverrides(memoryClass.superClass);
 
         return memoryClass;
+    }
+
+    /**
+     * Gets a class by the provided class name
+     *
+     * @param className name of the class that you want to get
+     * @return {@link MemoryClass}
+     */
+
+    public MemoryClass getClass(String className) {
+        return classes.getOrDefault(className, null);
     }
 
     /**

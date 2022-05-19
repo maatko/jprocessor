@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import lombok.Getter;
 import me.mat.jprocessor.JProcessor;
 import me.mat.jprocessor.jar.MemoryJar;
+import me.mat.jprocessor.jar.cls.MemoryClass;
 import me.mat.jprocessor.mappings.generation.MappingGenerateException;
 import me.mat.jprocessor.mappings.generation.generator.MappingGenerator;
 import me.mat.jprocessor.mappings.mapping.FieldMapping;
@@ -32,6 +33,8 @@ public class MappingManager {
     private final Map<String, List<FieldMapping>> fieldMappings = new HashMap<>();
 
     private final Map<String, List<MethodMapping>> methodMappings = new HashMap<>();
+
+    private final boolean unMapping;
 
     private String currentClass;
 
@@ -64,6 +67,9 @@ public class MappingManager {
         JProcessor.Logging.info("Loaded '%d' class mappings", classMappings.size());
         JProcessor.Logging.info("Loaded '%d' field mappings", fieldMappings.size());
         JProcessor.Logging.info("Loaded '%d' method mappings", methodMappings.size());
+
+        // set the unMapping flag to false
+        this.unMapping = true;
     }
 
     public MappingManager(MappingGenerator mappingGenerator, MemoryJar memoryJar) throws MappingGenerateException {
@@ -73,13 +79,25 @@ public class MappingManager {
         // update the manager instance in the generator
         mappingGenerator.manager(this);
 
+        Map<String, MemoryClass> classes = memoryJar.getClasses();
+
         // loop through all the classes and generate the mappings for the class
-        memoryJar.getClasses().forEach(mappingGenerator::generate);
+        classes.forEach((className, memoryClass) -> mappingGenerator.generate(className, memoryJar, memoryClass));
+
+        // loop through all the inner classes are generated their mappings
+        classes.forEach((className, memoryClass) -> mappingGenerator.generateInner(className, memoryJar, memoryClass));
 
         // log the generated data to the console
         JProcessor.Logging.info("Generated '%d' class mappings", classMappings.size());
         JProcessor.Logging.info("Generated '%d' field mappings", fieldMappings.size());
         JProcessor.Logging.info("Generated '%d' method mappings", methodMappings.size());
+
+        // set the unMapping flag to false
+        this.unMapping = false;
+    }
+
+    public Mapping getClass(String name) {
+        return reverseClassMappings.get(name);
     }
 
     /**
@@ -170,19 +188,25 @@ public class MappingManager {
     /**
      * Compiled all the mappings that
      * the SimpleRemapper supports
+     *  TODO :: Fix this method / add support for mapping and unmapping jars
      *
      * @return {@link Map}
      */
 
     public Map<String, String> getMappings() {
         Map<String, String> mappings = new HashMap<>();
-        classMappings.forEach((className, mapping) -> mappings.put(className, mapping.name));
+
+        classMappings.forEach((className, mapping) ->
+                mappings.put(unMapping ? mapping.mapping : mapping.name, unMapping ? mapping.name : mapping.mapping));
+
         fieldMappings.forEach((className, fieldMappings)
                 -> fieldMappings.forEach(mapping
-                -> mappings.put(className + "." + mapping.mapping, mapping.name)));
+                -> mappings.put(className + "." + mapping.mapping, unMapping ? mapping.name : mapping.mapping)));
+
         methodMappings.forEach((className, methodMappings)
                 -> methodMappings.forEach(mapping
                 -> mappings.put(className + "." + mapping.mapping + mapping.mappedDescription, mapping.name)));
+
         return mappings;
     }
 

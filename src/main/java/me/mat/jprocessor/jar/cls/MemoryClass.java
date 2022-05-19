@@ -10,6 +10,7 @@ import org.objectweb.asm.tree.MethodNode;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.JarEntry;
@@ -18,6 +19,8 @@ import java.util.jar.JarOutputStream;
 @RequiredArgsConstructor
 public class MemoryClass {
 
+    public final Map<String, MemoryInnerClass> innerClasses = new HashMap<>();
+
     public final List<MemoryField> fields = new ArrayList<>();
 
     public final List<MemoryMethod> methods = new ArrayList<>();
@@ -25,9 +28,11 @@ public class MemoryClass {
     @NonNull
     public ClassNode classNode;
 
+    public MemoryClass outerClass;
     public MemoryClass superClass;
 
     public boolean isMainClass;
+    public boolean isInnerClass;
 
     /**
      * Initializes the class in the memory
@@ -40,11 +45,24 @@ public class MemoryClass {
         fields.clear();
         methods.clear();
 
+        // get the outer class
+        outerClass = classes.get(classNode.outerClass);
+
         // load all the fields into the memory
         classNode.fields.forEach(fieldNode -> fields.add(new MemoryField(fieldNode)));
 
         // load all the methods into the memory
         classNode.methods.forEach(methodNode -> methods.add(new MemoryMethod(methodNode)));
+
+        // load all the inner classes into the memory
+        classNode.innerClasses.forEach(innerClassNode -> {
+            MemoryInnerClass innerClass = new MemoryInnerClass(innerClassNode);
+            if (classes.containsKey(innerClass.classNode.name)) {
+                innerClass.outerClass = classes.get(innerClass.classNode.name);
+                innerClass.outerClass.isInnerClass = true;
+            }
+            innerClasses.put(innerClassNode.name, innerClass);
+        });
 
         // find the super class
         this.findSuperClass(classes);
@@ -162,6 +180,27 @@ public class MemoryClass {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Checks if the current class is
+     * a broken inner class
+     *
+     * @return {@link Boolean}
+     */
+
+    public boolean isBrokenInnerClass() {
+        return classNode.name.contains("$") && classNode.outerClass == null;
+    }
+
+    /**
+     * Checks if the class is an enum
+     *
+     * @return {@link Boolean}
+     */
+
+    public boolean isEnum() {
+        return classNode.superName != null && classNode.superName.toLowerCase().contains("enum");
     }
 
     /**
