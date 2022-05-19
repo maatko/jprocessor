@@ -80,6 +80,10 @@ public class ProGuardProcessor implements MappingProcessor {
         this.mappingManager = mappingManager;
     }
 
+    /**
+     * Maps all the return types
+     */
+
     void mapReturnTypes() {
         fieldMappings.forEach((className, mappings) -> mappings.forEach(fieldMapping -> {
             String returnType = fieldMapping.returnType;
@@ -93,30 +97,38 @@ public class ProGuardProcessor implements MappingProcessor {
         }));
     }
 
+    /**
+     * Maps all the descriptions
+     */
+
     void mapDescriptions() {
         methodMappings.forEach((className, mappings) -> mappings.forEach(methodMapping -> {
-            String description = methodMapping.description;
-            if (!description.isEmpty()) {
-                methodMapping.mappedDescription = "";
-                String[] types = description.split(",");
-                for (String type : types) {
-                    if (reverseClassMappings.containsKey(type)) {
-                        methodMapping.mappedDescription += reverseClassMappings.get(type).mapping;
-                        methodMapping.mappedDescription += ",";
-                    } else {
-                        methodMapping.mappedDescription += type;
-                        methodMapping.mappedDescription += ",";
-                    }
+            if (!methodMapping.description.isEmpty()) {
+                StringBuilder builder = new StringBuilder();
+                for (String type : methodMapping.description.split(",")) {
+                    builder.append(getMappedType(type));
+                    builder.append(",");
                 }
-                if (!methodMapping.mappedDescription.isEmpty()) {
-                    methodMapping.mappedDescription = methodMapping.mappedDescription.substring(
+                String description = builder.toString();
+                if (!description.isEmpty()) {
+                    methodMapping.mappedDescription = description.substring(
                             0,
-                            methodMapping.mappedDescription.length() - 1
+                            description.length() - 1
                     );
                 }
             }
         }));
     }
+
+    /**
+     * Builds a method description based on the
+     * unmapped version of the description
+     * and the provided return type
+     *
+     * @param description unmapped version of the description
+     * @param returnType  return type of the method
+     * @return {@link String}
+     */
 
     String buildDescription(String description, String returnType) {
         StringBuilder builder = new StringBuilder("(");
@@ -128,11 +140,18 @@ public class ProGuardProcessor implements MappingProcessor {
         return builder.toString();
     }
 
-    String getMappedType(String returnType) {
-        if (reverseClassMappings.containsKey(returnType)) {
-            return reverseClassMappings.get(returnType).mapping;
+    /**
+     * Gets a mapped type from a type
+     *
+     * @param type type that you want to get the mapping for
+     * @return {@link String}
+     */
+
+    String getMappedType(String type) {
+        if (reverseClassMappings.containsKey(type)) {
+            return reverseClassMappings.get(type).mapping;
         }
-        return returnType;
+        return type;
     }
 
 }
