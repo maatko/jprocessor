@@ -19,16 +19,20 @@ public class JProcessTest {
 
     private static final String TEST_JAR_URL = "https://github.com/sim0n/Evaluator/releases/download/1.02/Evaluator-1.0-SNAPSHOT.jar";
 
-    private static final File MANIFEST_JSON_FILE = new File("manifest.json");
-
-    private static final File TEST_JAR_FILE = new File("evaluator.jar");
-
-    private static final File MAPPINGS_FILE = new File("mappings.txt");
-
-    private static final File CLIENT_JAR_FILE = new File("client.jar");
+    private static final File TESTS_DIRECTORY = new File("tests");
+    private static final File MANIFEST_JSON_FILE = new File(TESTS_DIRECTORY, "manifest.json");
+    private static final File TEST_JAR_FILE = new File(TESTS_DIRECTORY, "evaluator.jar");
+    private static final File TESTS_OUT_JAR_FILE = new File(TESTS_DIRECTORY, "evaluator_out.jar");
+    private static final File MAPPINGS_FILE = new File(TESTS_DIRECTORY, "mappings.txt");
+    private static final File MAPPINGS_OUT_FILE = new File(TESTS_DIRECTORY, "mappings_out.json");
+    private static final File CLIENT_JAR_FILE = new File(TESTS_DIRECTORY, "client.jar");
+    private static final File CLIENT_OUT_JAR_FILE = new File(TESTS_DIRECTORY, "client_out.jar");
 
     @Test
     public void runMappingTest() throws FileNotFoundException, MappingLoadException {
+        // if the test directory does not exist create it
+        assert TESTS_DIRECTORY.exists() || TESTS_DIRECTORY.mkdirs();
+
         // check for the json manifest
         if (!MANIFEST_JSON_FILE.exists()) {
             download(MANIFEST_JSON_URL, MANIFEST_JSON_FILE);
@@ -58,14 +62,17 @@ public class JProcessTest {
         memoryJar.reMap(mappingManager);
 
         // save the jar to the disk
-        memoryJar.save(new File("client_out.jar"));
+        memoryJar.save(CLIENT_OUT_JAR_FILE);
 
         // save the mappings to a file
-        mappingManager.save(new File("mappings_out.json"));
+        mappingManager.save(MAPPINGS_OUT_FILE);
     }
 
     @Test
     public void runJarTest() throws FileNotFoundException {
+        // if the test directory does not exist create it
+        assert TESTS_DIRECTORY.exists() || TESTS_DIRECTORY.mkdirs();
+
         // check for the jar
         if (!TEST_JAR_FILE.exists()) {
             download(TEST_JAR_URL, TEST_JAR_FILE);
@@ -99,8 +106,7 @@ public class JProcessTest {
         );
 
         // save the jar to the output file
-        File outputFile = new File("out.jar");
-        memoryJar.save(outputFile);
+        memoryJar.save(TESTS_OUT_JAR_FILE);
     }
 
     /**

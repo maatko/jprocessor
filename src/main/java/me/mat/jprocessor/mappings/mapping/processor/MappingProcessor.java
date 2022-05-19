@@ -1,4 +1,4 @@
-package me.mat.jprocessor.mappings.processor;
+package me.mat.jprocessor.mappings.mapping.processor;
 
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.mappings.mapping.FieldMapping;

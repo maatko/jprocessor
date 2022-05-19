@@ -17,6 +17,13 @@ public class Mapping {
         this(name, name);
     }
 
+    /**
+     * Converts contents of this class
+     * to a json object so it can be saved
+     *
+     * @return {@link JsonObject}
+     */
+
     public JsonObject toJson() {
         JsonObject object = new JsonObject();
 

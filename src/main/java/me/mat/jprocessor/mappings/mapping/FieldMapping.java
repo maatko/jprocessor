@@ -17,6 +17,13 @@ public class FieldMapping extends Mapping {
         this.mappedReturnType = returnType;
     }
 
+    /**
+     * Converts contents of this class
+     * to a json object so it can be saved
+     *
+     * @return {@link JsonObject}
+     */
+
     @Override
     public JsonObject toJson() {
         JsonObject object = super.toJson();

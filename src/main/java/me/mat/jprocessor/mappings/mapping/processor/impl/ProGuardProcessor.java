@@ -1,10 +1,10 @@
-package me.mat.jprocessor.mappings.processor.impl;
+package me.mat.jprocessor.mappings.mapping.processor.impl;
 
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.mappings.mapping.FieldMapping;
 import me.mat.jprocessor.mappings.mapping.Mapping;
 import me.mat.jprocessor.mappings.mapping.MethodMapping;
-import me.mat.jprocessor.mappings.processor.MappingProcessor;
+import me.mat.jprocessor.mappings.mapping.processor.MappingProcessor;
 import me.mat.jprocessor.util.asm.ASMUtil;
 
 import java.util.List;
@@ -16,6 +16,11 @@ public class ProGuardProcessor implements MappingProcessor {
     private static final String DELIMITER = " -> ";
 
     private MappingManager mappingManager;
+
+    private Map<String, Mapping> classMappings;
+    private Map<String, Mapping> reverseClassMappings;
+    private Map<String, List<FieldMapping>> fieldMappings;
+    private Map<String, List<MethodMapping>> methodMappings;
 
     @Override
     public void process(String line) {
@@ -50,12 +55,24 @@ public class ProGuardProcessor implements MappingProcessor {
     @Override
     public void build(Map<String, Mapping> classMappings, Map<String, Mapping> reverseClassMappings,
                       Map<String, List<FieldMapping>> fieldMappings, Map<String, List<MethodMapping>> methodMappings) {
+        // save the mappings
+        this.classMappings = classMappings;
+        this.reverseClassMappings = reverseClassMappings;
+        this.fieldMappings = fieldMappings;
+        this.methodMappings = methodMappings;
+
         // map all the types and descriptions
-        mapReturnTypes(reverseClassMappings, fieldMappings, methodMappings);
-        mapDescriptions(reverseClassMappings, methodMappings);
+        mapReturnTypes();
+        mapDescriptions();
 
         // build all the descriptions
-        buildDescriptions(methodMappings);
+        methodMappings.forEach((className, mappings) -> mappings.forEach(methodMapping -> {
+            // build the unmapped version of the description
+            methodMapping.description = buildDescription(methodMapping.description, methodMapping.returnType);
+
+            // build the mapped version of the description
+            methodMapping.mappedDescription = buildDescription(methodMapping.mappedDescription, methodMapping.mappedReturnType);
+        }));
     }
 
     @Override
@@ -63,32 +80,20 @@ public class ProGuardProcessor implements MappingProcessor {
         this.mappingManager = mappingManager;
     }
 
-    void mapReturnTypes(Map<String, Mapping> reverseClassMappings,
-                        Map<String, List<FieldMapping>> fieldMappings,
-                        Map<String, List<MethodMapping>> methodMappings) {
+    void mapReturnTypes() {
         fieldMappings.forEach((className, mappings) -> mappings.forEach(fieldMapping -> {
             String returnType = fieldMapping.returnType;
-            if (reverseClassMappings.containsKey(returnType)) {
-                fieldMapping.mappedReturnType = reverseClassMappings.get(returnType).mapping;
-            } else {
-                fieldMapping.mappedReturnType = returnType;
-            }
-            fieldMapping.returnType = ASMUtil.toByteCodeFromJava(fieldMapping.returnType);
-            fieldMapping.mappedReturnType = ASMUtil.toByteCodeFromJava(fieldMapping.mappedReturnType);
+            fieldMapping.returnType = ASMUtil.toByteCodeFromJava(returnType);
+            fieldMapping.mappedReturnType = ASMUtil.toByteCodeFromJava(getMappedType(returnType));
         }));
         methodMappings.forEach((className, mappings) -> mappings.forEach(methodMapping -> {
             String returnType = methodMapping.returnType;
-            if (reverseClassMappings.containsKey(returnType)) {
-                methodMapping.mappedReturnType = reverseClassMappings.get(returnType).mapping;
-            } else {
-                methodMapping.mappedReturnType = returnType;
-            }
-            methodMapping.returnType = ASMUtil.toByteCodeFromJava(methodMapping.returnType);
-            methodMapping.mappedReturnType = ASMUtil.toByteCodeFromJava(methodMapping.mappedReturnType);
+            methodMapping.returnType = ASMUtil.toByteCodeFromJava(returnType);
+            methodMapping.mappedReturnType = ASMUtil.toByteCodeFromJava(getMappedType(returnType));
         }));
     }
 
-    void mapDescriptions(Map<String, Mapping> reverseClassMappings, Map<String, List<MethodMapping>> methodMappings) {
+    void mapDescriptions() {
         methodMappings.forEach((className, mappings) -> mappings.forEach(methodMapping -> {
             String description = methodMapping.description;
             if (!description.isEmpty()) {
@@ -113,13 +118,6 @@ public class ProGuardProcessor implements MappingProcessor {
         }));
     }
 
-    void buildDescriptions(Map<String, List<MethodMapping>> methodMappings) {
-        methodMappings.forEach((className, mappings) -> mappings.forEach(methodMapping -> {
-            methodMapping.description = buildDescription(methodMapping.description, methodMapping.returnType);
-            methodMapping.mappedDescription = buildDescription(methodMapping.mappedDescription, methodMapping.mappedReturnType);
-        }));
-    }
-
     String buildDescription(String description, String returnType) {
         StringBuilder builder = new StringBuilder("(");
         for (String type : description.split(",")) {
@@ -128,6 +126,13 @@ public class ProGuardProcessor implements MappingProcessor {
         builder.append(")");
         builder.append(returnType);
         return builder.toString();
+    }
+
+    String getMappedType(String returnType) {
+        if (reverseClassMappings.containsKey(returnType)) {
+            return reverseClassMappings.get(returnType).mapping;
+        }
+        return returnType;
     }
 
 }

@@ -6,12 +6,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import lombok.Getter;
 import me.mat.jprocessor.JProcessor;
-import me.mat.jprocessor.jar.cls.MemoryClass;
-import me.mat.jprocessor.jar.cls.MemoryMethod;
 import me.mat.jprocessor.mappings.mapping.FieldMapping;
 import me.mat.jprocessor.mappings.mapping.Mapping;
 import me.mat.jprocessor.mappings.mapping.MethodMapping;
-import me.mat.jprocessor.mappings.processor.MappingProcessor;
+import me.mat.jprocessor.mappings.mapping.processor.MappingProcessor;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -22,7 +20,7 @@ import java.util.Map;
 @Getter
 public class MappingManager {
 
-    private static final Gson GSON = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
+    private static final Gson GSON = new GsonBuilder().serializeNulls().create();
 
     private final Map<String, Mapping> classMappings = new HashMap<>();
 
@@ -61,22 +59,6 @@ public class MappingManager {
         JProcessor.Logging.info("Loaded '%d' class mappings", classMappings.size());
         JProcessor.Logging.info("Loaded '%d' field mappings", fieldMappings.size());
         JProcessor.Logging.info("Loaded '%d' method mappings", methodMappings.size());
-    }
-
-    public Mapping cls(MemoryClass memoryClass) {
-        return cls(memoryClass.classNode.name);
-    }
-
-    public Mapping cls(String className) {
-        return classMappings.getOrDefault(className, null);
-    }
-
-    public MethodMapping method(String className, MemoryMethod memoryMethod) {
-        return method(className, memoryMethod.methodNode.name, memoryMethod.methodNode.desc);
-    }
-
-    public MethodMapping method(String className, String mapping, String mappedDescription) {
-        return methodMappings.getOrDefault(className, new ArrayList<>()).stream().filter(mm -> mm.mapping.equals(mapping) && mm.mappedDescription.equals(mappedDescription)).findFirst().orElse(null);
     }
 
     /**
@@ -127,6 +109,12 @@ public class MappingManager {
         mappings.add(new MethodMapping(name, mapping, returnType, description));
         methodMappings.put(currentClass, mappings);
     }
+
+    /**
+     * Saves all the mappings into a json file
+     *
+     * @param file file that you want to save tov
+     */
 
     public void save(File file) {
         try (FileWriter fileWriter = new FileWriter(file)) {
