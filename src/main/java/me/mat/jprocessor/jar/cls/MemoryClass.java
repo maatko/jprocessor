@@ -27,6 +27,8 @@ public class MemoryClass {
 
     public MemoryClass superClass;
 
+    public boolean isMainClass;
+
     /**
      * Initializes the class in the memory
      *

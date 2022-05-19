@@ -6,6 +6,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import lombok.Getter;
 import me.mat.jprocessor.JProcessor;
+import me.mat.jprocessor.jar.MemoryJar;
+import me.mat.jprocessor.mappings.generation.MappingGenerateException;
+import me.mat.jprocessor.mappings.generation.generator.MappingGenerator;
 import me.mat.jprocessor.mappings.mapping.FieldMapping;
 import me.mat.jprocessor.mappings.mapping.Mapping;
 import me.mat.jprocessor.mappings.mapping.MethodMapping;
@@ -41,8 +44,10 @@ public class MappingManager {
         // log to console that mappings are being loaded
         JProcessor.Logging.info("Loading the mappings");
 
-        // load all the mappings
+        // update the manager instance in the generator
         processor.manager(this);
+
+        // loop through the mappings file and load the mappings
         try (BufferedReader reader = new BufferedReader(new FileReader(mappings))) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -59,6 +64,22 @@ public class MappingManager {
         JProcessor.Logging.info("Loaded '%d' class mappings", classMappings.size());
         JProcessor.Logging.info("Loaded '%d' field mappings", fieldMappings.size());
         JProcessor.Logging.info("Loaded '%d' method mappings", methodMappings.size());
+    }
+
+    public MappingManager(MappingGenerator mappingGenerator, MemoryJar memoryJar) throws MappingGenerateException {
+        // log to console that mappings are being loaded
+        JProcessor.Logging.info("Generating mappings");
+
+        // update the manager instance in the generator
+        mappingGenerator.manager(this);
+
+        // loop through all the classes and generate the mappings for the class
+        memoryJar.getClasses().forEach(mappingGenerator::generate);
+
+        // log the generated data to the console
+        JProcessor.Logging.info("Generated '%d' class mappings", classMappings.size());
+        JProcessor.Logging.info("Generated '%d' field mappings", fieldMappings.size());
+        JProcessor.Logging.info("Generated '%d' method mappings", methodMappings.size());
     }
 
     /**

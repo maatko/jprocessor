@@ -24,6 +24,14 @@ public class JarUtil {
 
     private static final String CLASS_SUFFIX = ".class";
 
+    public static String getMainClass(File file) {
+        try (JarFile jarFile = new JarFile(file)) {
+            return jarFile.getManifest().getMainAttributes().getValue("Main-Class");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     /**
      * Loads all the resources from the
      * provided file into the provided map

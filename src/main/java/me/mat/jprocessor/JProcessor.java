@@ -7,6 +7,9 @@ import me.mat.jprocessor.mappings.MappingLoadCallback;
 import me.mat.jprocessor.mappings.MappingLoadException;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.mappings.MappingType;
+import me.mat.jprocessor.mappings.generation.GenerationType;
+import me.mat.jprocessor.mappings.generation.MappingGenerateCallback;
+import me.mat.jprocessor.mappings.generation.MappingGenerateException;
 import me.mat.jprocessor.util.log.ConsoleLoggerImpl;
 import me.mat.jprocessor.util.log.Logger;
 
@@ -83,6 +86,39 @@ public class JProcessor {
     }
 
     public static final class Mapping {
+
+        /**
+         * Generates mappings for the loaded memory jar
+         * based on the provided generation type
+         *
+         * @param generationType type of the mapping generator that you want to use
+         * @param memoryJar      jar that you want to generate mappings for
+         * @return {@link MappingManager}
+         * @throws MappingGenerateException
+         */
+
+        public static MappingManager generate(GenerationType generationType, MemoryJar memoryJar) throws MappingGenerateException {
+            return new MappingManager(generationType.getMappingGenerator(), memoryJar);
+        }
+
+        /**
+         * Generates mappings for the loaded memory jar
+         * asynchronously based on the provided generation type
+         *
+         * @param generationType type of the mapping generator that you want to use
+         * @param memoryJar      jar that you want to generate mappings for
+         */
+
+
+        public static void generate(GenerationType generationType, MemoryJar memoryJar, MappingGenerateCallback callback) {
+            EXECUTOR_SERVICE.submit(() -> {
+                try {
+                    callback.onFinish(generate(generationType, memoryJar));
+                } catch (MappingGenerateException e) {
+                    callback.onFail(e.getMessage());
+                }
+            });
+        }
 
         /**
          * Loads mappings from a file

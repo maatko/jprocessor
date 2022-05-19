@@ -21,11 +21,8 @@ Library that makes working with ASM and classes easier
         // load the jar into memory
         MemoryJar memoryJar = JProcessor.Jar.load(JAR_FILE);
 
-        // check that the classes were loaded
-        assert !memoryJar.classes.isEmpty();
-
-        // check that the resources were loaded
-        assert !memoryJar.resources.isEmpty();
+        // check that the jar is loaded
+        assert !memoryJar.isLoaded();
 
         // inject a test class into the jar
         MemoryClass cls = memoryJar.createClass(

@@ -1,5 +1,6 @@
 package me.mat.jprocessor.jar;
 
+import lombok.Getter;
 import me.mat.jprocessor.JProcessor;
 import me.mat.jprocessor.jar.cls.MemoryClass;
 import me.mat.jprocessor.mappings.MappingManager;
@@ -16,15 +17,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.JarOutputStream;
 
+@Getter
 public class MemoryJar {
 
-    public final Map<String, MemoryClass> classes = new HashMap<>();
+    private final Map<String, MemoryClass> classes = new HashMap<>();
 
-    public final Map<String, MemoryResource> resources = new HashMap<>();
+    private final Map<String, MemoryResource> resources = new HashMap<>();
 
     public MemoryJar(File file) {
         // log to console that the jar's classes are loading into the memory
-        JProcessor.Logging.info("Loading '%s' classes into memory", file.getName());
+        JProcessor.Logging.info("Loading '%s' into memory", file.getName());
 
         // load all the classes into the memory
         JarUtil.load(file).forEach(classNode -> classes.put(classNode.name, new MemoryClass(classNode)));
@@ -34,9 +36,6 @@ public class MemoryJar {
 
         // log to console how many classes were loaded
         JProcessor.Logging.info("Loaded '%d' classes into memory", classes.size());
-
-        // log to console that the jar's resources are loading into the memory
-        JProcessor.Logging.info("Loading '%s' resources into memory", file.getName());
 
         // load all the resources
         JarUtil.loadResource(file, resources);
@@ -49,6 +48,12 @@ public class MemoryJar {
 
         // build the class hierarchy
         classes.forEach((className, memoryClass) -> memoryClass.findOverrides(memoryClass.superClass));
+
+        // get the main class of the jar
+        String mainClass = JarUtil.getMainClass(file).replaceAll("\\.", "/");
+        if (classes.containsKey(mainClass)) {
+            classes.get(mainClass).isMainClass = true;
+        }
     }
 
     /**
@@ -58,7 +63,7 @@ public class MemoryJar {
      * @param mappingManager mappings that you want to use to remap
      */
 
-    public void reMap(MappingManager mappingManager) {
+    public void remap(MappingManager mappingManager) {
         SimpleRemapper remapper = new SimpleRemapper(mappingManager.getMappings());
         classes.forEach((className, memoryClass) -> {
             ClassNode mappedNode = new ClassNode();
@@ -152,6 +157,18 @@ public class MemoryJar {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Checks if the jar is loaded
+     * aka is there is any classes
+     * in the classes pool
+     *
+     * @return {@link Boolean}
+     */
+
+    public boolean isLoaded() {
+        return !classes.isEmpty();
     }
 
 }

@@ -7,6 +7,8 @@ import me.mat.jprocessor.jar.cls.MemoryClass;
 import me.mat.jprocessor.mappings.MappingLoadException;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.mappings.MappingType;
+import me.mat.jprocessor.mappings.generation.GenerationType;
+import me.mat.jprocessor.mappings.generation.MappingGenerateException;
 import org.junit.jupiter.api.Test;
 import org.objectweb.asm.Opcodes;
 
@@ -59,7 +61,7 @@ public class JProcessTest {
         MemoryJar memoryJar = JProcessor.Jar.load(CLIENT_JAR_FILE);
 
         // remap the jar
-        memoryJar.reMap(mappingManager);
+        memoryJar.remap(mappingManager);
 
         // save the jar to the disk
         memoryJar.save(CLIENT_OUT_JAR_FILE);
@@ -81,11 +83,19 @@ public class JProcessTest {
         // load the jar into memory
         MemoryJar memoryJar = JProcessor.Jar.load(TEST_JAR_FILE);
 
-        // check that the classes were loaded
-        assert !memoryJar.classes.isEmpty();
+        // check that the jar is loaded
+        assert memoryJar.isLoaded();
 
-        // check that the resources were loaded
-        assert !memoryJar.resources.isEmpty();
+        // generate the mappings for the current jar
+        MappingManager mappingManager;
+        try {
+            mappingManager = JProcessor.Mapping.generate(GenerationType.ALPHABET, memoryJar);
+        } catch (MappingGenerateException e) {
+            throw new RuntimeException(e);
+        }
+
+        // remap the jar with the generated mappings
+        memoryJar.remap(mappingManager);
 
         // inject a test class into the jar
         MemoryClass cls = memoryJar.createClass(
