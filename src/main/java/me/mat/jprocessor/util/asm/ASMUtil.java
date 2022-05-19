@@ -5,8 +5,13 @@ import lombok.NoArgsConstructor;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ASMUtil {
+
+    private static final Map<String, String> TYPE_CONVERSION = new HashMap<>();
 
     /**
      * Checks if the provided method nodes are the same
@@ -36,33 +41,34 @@ public class ASMUtil {
     /**
      * Turns a java type into a asm type
      *
-     * @param type type that you want to convert
+     * @param javaType type that you want to convert
      * @return {@link String}
      */
 
-    public static String toByteCodeFromJava(String type) {
-        switch (type.toLowerCase()) {
-            case "void":
-                return "V";
-            case "boolean":
-                return "Z";
-            case "byte":
-                return "B";
-            case "char":
-                return "C";
-            case "short":
-                return "S";
-            case "int":
-                return "I";
-            case "long":
-                return "J";
-            case "float":
-                return "F";
-            case "double":
-                return "D";
-            default:
-                return !type.isEmpty() ? "L" + type + ";" : type;
+    public static String toByteCodeFromJava(String javaType) {
+        String type = javaType.toLowerCase();
+        StringBuilder prefix = new StringBuilder();
+        if (type.contains("[")) {
+            for (int i = 0; i < type.substring(type.indexOf("[")).length() / 2; i++) {
+                prefix.append("[");
+            }
+            type = type.substring(0, type.indexOf("["));
         }
+        return prefix + TYPE_CONVERSION.getOrDefault(type, !javaType.isEmpty() ? "L" + javaType + ";" : javaType);
+    }
+
+    static {
+
+        TYPE_CONVERSION.put("void", "V");
+        TYPE_CONVERSION.put("boolean", "Z");
+        TYPE_CONVERSION.put("byte", "B");
+        TYPE_CONVERSION.put("char", "C");
+        TYPE_CONVERSION.put("short", "S");
+        TYPE_CONVERSION.put("int", "I");
+        TYPE_CONVERSION.put("long", "J");
+        TYPE_CONVERSION.put("float", "F");
+        TYPE_CONVERSION.put("double", "D");
+
     }
 
 }

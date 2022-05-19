@@ -1,5 +1,9 @@
 package me.mat.jprocessor.mappings;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import lombok.Getter;
 import me.mat.jprocessor.JProcessor;
 import me.mat.jprocessor.jar.cls.MemoryClass;
@@ -9,10 +13,7 @@ import me.mat.jprocessor.mappings.mapping.Mapping;
 import me.mat.jprocessor.mappings.mapping.MethodMapping;
 import me.mat.jprocessor.mappings.processor.MappingProcessor;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +21,8 @@ import java.util.Map;
 
 @Getter
 public class MappingManager {
+
+    private static final Gson GSON = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
 
     private final Map<String, Mapping> classMappings = new HashMap<>();
 
@@ -123,6 +126,36 @@ public class MappingManager {
         List<MethodMapping> mappings = methodMappings.getOrDefault(currentClass, new ArrayList<>());
         mappings.add(new MethodMapping(name, mapping, returnType, description));
         methodMappings.put(currentClass, mappings);
+    }
+
+    public void save(File file) {
+        try (FileWriter fileWriter = new FileWriter(file)) {
+            JsonArray array = new JsonArray();
+
+            classMappings.forEach((className, mapping) -> {
+                JsonObject object = mapping.toJson();
+
+                List<FieldMapping> fields = fieldMappings.getOrDefault(className, null);
+                if (fields != null) {
+                    JsonArray fieldsArray = new JsonArray();
+                    fields.forEach(fieldMapping -> fieldsArray.add(fieldMapping.toJson()));
+                    object.add("fields", fieldsArray);
+                }
+
+                List<MethodMapping> methods = methodMappings.getOrDefault(className, null);
+                if (methods != null) {
+                    JsonArray methodsArray = new JsonArray();
+                    methods.forEach(methodMapping -> methodsArray.add(methodMapping.toJson()));
+                    object.add("methods", methodsArray);
+                }
+
+                array.add(object);
+            });
+
+            fileWriter.write(GSON.toJson(array));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

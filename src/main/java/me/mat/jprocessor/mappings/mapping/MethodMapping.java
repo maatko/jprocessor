@@ -1,5 +1,6 @@
 package me.mat.jprocessor.mappings.mapping;
 
+import com.google.gson.JsonObject;
 import lombok.NonNull;
 
 public class MethodMapping extends FieldMapping {
@@ -11,6 +12,16 @@ public class MethodMapping extends FieldMapping {
         super(name, mapping, returnType);
         this.description = description;
         this.mappedDescription = description;
+    }
+
+    @Override
+    public JsonObject toJson() {
+        JsonObject object = super.toJson();
+
+        object.addProperty("description", description);
+        object.addProperty("mapped_description", mappedDescription);
+
+        return object;
     }
 
 }

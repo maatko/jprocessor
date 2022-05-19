@@ -114,17 +114,9 @@ public class ProGuardProcessor implements MappingProcessor {
     }
 
     String buildDescription(String description, String returnType) {
-        boolean hasRan = false;
         StringBuilder builder = new StringBuilder("(");
         for (String type : description.split(",")) {
-            String asmType = ASMUtil.toByteCodeFromJava(type);
-            if (hasRan && !builder.toString().endsWith(";") && asmType.startsWith("L")) {
-                builder.append(";");
-                builder.append(asmType);
-            } else {
-                builder.append(asmType);
-            }
-            hasRan = true;
+            builder.append(ASMUtil.toByteCodeFromJava(type));
         }
         builder.append(")");
         builder.append(returnType);

@@ -59,6 +59,9 @@ public class JProcessTest {
 
         // save the jar to the disk
         memoryJar.save(new File("client_out.jar"));
+
+        // save the mappings to a file
+        mappingManager.save(new File("mappings_out.json"));
     }
 
     @Test

@@ -1,5 +1,6 @@
 package me.mat.jprocessor.mappings.mapping;
 
+import com.google.gson.JsonObject;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -14,6 +15,15 @@ public class Mapping {
 
     public Mapping(@NonNull String name) {
         this(name, name);
+    }
+
+    public JsonObject toJson() {
+        JsonObject object = new JsonObject();
+
+        object.addProperty("name", name);
+        object.addProperty("mapping", mapping);
+
+        return object;
     }
 
 }
