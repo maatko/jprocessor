@@ -70,6 +70,8 @@ public class ProGuardProcessor implements MappingProcessor {
             String returnType = fieldMapping.returnType;
             if (reverseClassMappings.containsKey(returnType)) {
                 fieldMapping.mappedReturnType = reverseClassMappings.get(returnType).mapping;
+            } else {
+                fieldMapping.mappedReturnType = returnType;
             }
             fieldMapping.returnType = ASMUtil.toByteCodeFromJava(fieldMapping.returnType);
             fieldMapping.mappedReturnType = ASMUtil.toByteCodeFromJava(fieldMapping.mappedReturnType);
@@ -78,6 +80,8 @@ public class ProGuardProcessor implements MappingProcessor {
             String returnType = methodMapping.returnType;
             if (reverseClassMappings.containsKey(returnType)) {
                 methodMapping.mappedReturnType = reverseClassMappings.get(returnType).mapping;
+            } else {
+                methodMapping.mappedReturnType = returnType;
             }
             methodMapping.returnType = ASMUtil.toByteCodeFromJava(methodMapping.returnType);
             methodMapping.mappedReturnType = ASMUtil.toByteCodeFromJava(methodMapping.mappedReturnType);
@@ -93,6 +97,9 @@ public class ProGuardProcessor implements MappingProcessor {
                 for (String type : types) {
                     if (reverseClassMappings.containsKey(type)) {
                         methodMapping.mappedDescription += reverseClassMappings.get(type).mapping;
+                        methodMapping.mappedDescription += ",";
+                    } else {
+                        methodMapping.mappedDescription += type;
                         methodMapping.mappedDescription += ",";
                     }
                 }

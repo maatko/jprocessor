@@ -46,7 +46,7 @@ public class ASMUtil {
      */
 
     public static String toByteCodeFromJava(String javaType) {
-        String type = javaType.toLowerCase();
+        String type = javaType;
         StringBuilder prefix = new StringBuilder();
         if (type.contains("[")) {
             for (int i = 0; i < type.substring(type.indexOf("[")).length() / 2; i++) {
@@ -54,7 +54,7 @@ public class ASMUtil {
             }
             type = type.substring(0, type.indexOf("["));
         }
-        return prefix + TYPE_CONVERSION.getOrDefault(type, !javaType.isEmpty() ? "L" + javaType + ";" : javaType);
+        return prefix + TYPE_CONVERSION.getOrDefault(type.toLowerCase(), !type.isEmpty() ? "L" + type + ";" : type);
     }
 
     static {
