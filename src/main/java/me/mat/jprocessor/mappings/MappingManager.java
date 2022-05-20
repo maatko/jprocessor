@@ -97,6 +97,9 @@ public class MappingManager {
     }
 
     public Mapping getClass(String name) {
+        if (classMappings.containsKey(name)) {
+            return classMappings.get(name);
+        }
         return reverseClassMappings.get(name);
     }
 
@@ -108,13 +111,29 @@ public class MappingManager {
      */
 
     public void mapClass(String name, String mapping) {
-        currentClass = mapping;
+        currentClass = name;
 
-        if (!classMappings.containsKey(mapping)) {
+        if (!classMappings.containsKey(name)) {
             Mapping currentMapping = new Mapping(name, mapping);
-            classMappings.put(mapping, currentMapping);
-            reverseClassMappings.put(name, currentMapping);
+            classMappings.put(name, currentMapping);
+            reverseClassMappings.put(mapping, currentMapping);
         }
+    }
+
+    /**
+     * Maps a field to the current class
+     * by its name, mapping and return type
+     *
+     * @param name             name of the field that you want to map
+     * @param mapping          mapping of the field that you want to map
+     * @param returnType       return type of the field that you want to map
+     * @param mappedReturnType mapped return type of the field that you want to map
+     */
+
+    public void mapField(String name, String mapping, String returnType, String mappedReturnType) {
+        List<FieldMapping> mappings = fieldMappings.getOrDefault(currentClass, new ArrayList<>());
+        mappings.add(new FieldMapping(name, mapping, returnType, mappedReturnType));
+        fieldMappings.put(currentClass, mappings);
     }
 
     /**
@@ -127,9 +146,26 @@ public class MappingManager {
      */
 
     public void mapField(String name, String mapping, String returnType) {
-        List<FieldMapping> mappings = fieldMappings.getOrDefault(currentClass, new ArrayList<>());
-        mappings.add(new FieldMapping(name, mapping, returnType));
-        fieldMappings.put(currentClass, mappings);
+        mapField(name, mapping, returnType, returnType);
+    }
+
+    /**
+     * Maps a method to the current class
+     * by its name, mapping, return type and
+     * the description
+     *
+     * @param name              name of the method that you want to map
+     * @param mapping           mapping of the method that you want to map
+     * @param returnType        return type of the method that you want to map
+     * @param mappedReturnType  mapped return type of the method that you want to map
+     * @param description       description of the method that you want to map
+     * @param mappedDescription mapped description of the method that you want to map
+     */
+
+    public void mapMethod(String name, String mapping, String returnType, String mappedReturnType, String description, String mappedDescription) {
+        List<MethodMapping> mappings = methodMappings.getOrDefault(currentClass, new ArrayList<>());
+        mappings.add(new MethodMapping(name, mapping, returnType, mappedReturnType, description, mappedDescription));
+        methodMappings.put(currentClass, mappings);
     }
 
     /**
@@ -144,9 +180,7 @@ public class MappingManager {
      */
 
     public void mapMethod(String name, String mapping, String returnType, String description) {
-        List<MethodMapping> mappings = methodMappings.getOrDefault(currentClass, new ArrayList<>());
-        mappings.add(new MethodMapping(name, mapping, returnType, description));
-        methodMappings.put(currentClass, mappings);
+        mapMethod(name, mapping, returnType, returnType, description, description);
     }
 
     /**
@@ -188,25 +222,36 @@ public class MappingManager {
     /**
      * Compiled all the mappings that
      * the SimpleRemapper supports
-     *  TODO :: Fix this method / add support for mapping and unmapping jars
      *
      * @return {@link Map}
      */
 
     public Map<String, String> getMappings() {
         Map<String, String> mappings = new HashMap<>();
-
-        classMappings.forEach((className, mapping) ->
-                mappings.put(unMapping ? mapping.mapping : mapping.name, unMapping ? mapping.name : mapping.mapping));
-
-        fieldMappings.forEach((className, fieldMappings)
-                -> fieldMappings.forEach(mapping
-                -> mappings.put(className + "." + mapping.mapping, unMapping ? mapping.name : mapping.mapping)));
-
-        methodMappings.forEach((className, methodMappings)
-                -> methodMappings.forEach(mapping
-                -> mappings.put(className + "." + mapping.mapping + mapping.mappedDescription, mapping.name)));
-
+        classMappings.forEach((className, mapping) -> mappings.put(
+                unMapping ? mapping.mapping : mapping.name,
+                unMapping ? mapping.name : mapping.mapping
+        ));
+        fieldMappings.forEach((className, fieldMappings) -> fieldMappings.forEach(mapping -> {
+            Mapping classMapping = getClass(className);
+            if (classMapping != null) {
+                mappings.put(
+                        (unMapping ? classMapping.mapping : classMapping.name) + "." + (unMapping ? mapping.mapping : mapping.name),
+                        unMapping ? mapping.name : mapping.mapping
+                );
+            }
+        }));
+        methodMappings.forEach((className, methodMappings) -> {
+            Mapping classMapping = getClass(className);
+            if (classMapping != null) {
+                methodMappings.forEach(mapping -> {
+                    mappings.put(
+                            (unMapping ? classMapping.mapping : classMapping.name) + "." + (unMapping ? mapping.mapping + mapping.mappedDescription : mapping.name + mapping.description),
+                            unMapping ? mapping.name : mapping.mapping
+                    );
+                });
+            }
+        });
         return mappings;
     }
 

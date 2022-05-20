@@ -8,10 +8,14 @@ public class MethodMapping extends FieldMapping {
     public String description;
     public String mappedDescription;
 
-    public MethodMapping(@NonNull String name, @NonNull String mapping, @NonNull String returnType, @NonNull String description) {
-        super(name, mapping, returnType);
+    public MethodMapping(@NonNull String name, @NonNull String mapping, @NonNull String returnType, @NonNull String mappedReturnType, @NonNull String description, @NonNull String mappedDescription) {
+        super(name, mapping, returnType, mappedReturnType);
         this.description = description;
-        this.mappedDescription = description;
+        this.mappedDescription = mappedDescription;
+    }
+
+    public MethodMapping(@NonNull String name, @NonNull String mapping, @NonNull String returnType, @NonNull String description) {
+        this(name, mapping, returnType, returnType, description, description);
     }
 
     /**

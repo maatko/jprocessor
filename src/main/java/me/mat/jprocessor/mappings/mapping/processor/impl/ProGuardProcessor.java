@@ -148,8 +148,8 @@ public class ProGuardProcessor implements MappingProcessor {
      */
 
     String getMappedType(String type) {
-        if (reverseClassMappings.containsKey(type)) {
-            return reverseClassMappings.get(type).mapping;
+        if (classMappings.containsKey(type)) {
+            return classMappings.get(type).mapping;
         }
         return type;
     }

@@ -11,10 +11,14 @@ public class FieldMapping extends Mapping {
     @NonNull
     public String mappedReturnType;
 
-    public FieldMapping(@NonNull String name, @NonNull String mapping, @NonNull String returnType) {
+    public FieldMapping(@NonNull String name, @NonNull String mapping, @NonNull String returnType, @NonNull String mappedReturnType) {
         super(name, mapping);
         this.returnType = returnType;
-        this.mappedReturnType = returnType;
+        this.mappedReturnType = mappedReturnType;
+    }
+
+    public FieldMapping(@NonNull String name, @NonNull String mapping, @NonNull String returnType) {
+        this(name, mapping, returnType, returnType);
     }
 
     /**
