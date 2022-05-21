@@ -4,12 +4,20 @@ import lombok.Setter;
 import me.mat.jprocessor.jar.MemoryJar;
 import me.mat.jprocessor.jar.cls.MemoryClass;
 import me.mat.jprocessor.jar.cls.MemoryField;
+import me.mat.jprocessor.jar.cls.MemoryMethod;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.mappings.mapping.Mapping;
+import me.mat.jprocessor.mappings.mapping.MethodMapping;
+import org.objectweb.asm.tree.AnnotationNode;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public abstract class MappingGenerator {
+
+    private final Map<String, MemoryClass> parenting = new HashMap<>();
 
     @Setter
     protected MappingManager mappingManager;
@@ -17,6 +25,8 @@ public abstract class MappingGenerator {
     public abstract String mapClass(String className, MemoryClass memoryClass);
 
     public abstract String mapField(String className, MemoryClass memoryClass, MemoryField memoryField);
+
+    public abstract String mapMethod(String className, MemoryClass memoryClass, MemoryMethod memoryMethod);
 
     /**
      * Generates mappings for the provided jar file
@@ -33,7 +43,7 @@ public abstract class MappingGenerator {
             // check that the class is not an inner class
             if (!memoryClass.isInnerClass) {
                 // generate mappings for the current class
-                generateClass(className, memoryClass);
+                generateClass(className, memoryJar, memoryClass);
             }
         });
 
@@ -42,7 +52,7 @@ public abstract class MappingGenerator {
             // check that the class is an inner class
             if (memoryClass.isInnerClass) {
                 // generate mappings for the current class
-                generateClass(className, memoryClass);
+                generateClass(className, memoryJar, memoryClass);
             }
         });
     }
@@ -54,7 +64,10 @@ public abstract class MappingGenerator {
      * @param memoryClass instance of the MemoryClass of the class that you want to map
      */
 
-    void generateClass(String className, MemoryClass memoryClass) {
+    void generateClass(String className, MemoryJar memoryJar, MemoryClass memoryClass) {
+        // flag that checks if the class is an annotation
+        boolean isAnnotation = memoryClass.isAnnotation();
+
         // check that the current class is not a main class
         if (!memoryClass.isMainClass) {
             // create a string builder that will hold the mapping
@@ -97,6 +110,126 @@ public abstract class MappingGenerator {
                     memoryField.fieldNode.desc
             ));
         }
+
+        // create a list that will contain all the methods that might be overridden in the current class
+        List<MemoryMethod> overriddenMethods = new ArrayList<>();
+
+        // collect all the methods from the super classes
+        collectSuperMethods(memoryClass.superClass, overriddenMethods);
+
+        // collect all the methods from the extended interfaces
+        List<String> interfaces = memoryClass.classNode.interfaces;
+        if (interfaces != null && !interfaces.isEmpty()) {
+            interfaces.forEach(inf -> {
+                MemoryClass interfaceClass = memoryJar.getClass(inf);
+                if (interfaceClass != null) {
+                    collectSuperMethods(interfaceClass, overriddenMethods);
+                }
+            });
+        }
+
+        // loop through all the methods in the class and map them
+        memoryClass.methods.forEach(memoryMethod -> {
+
+            // check if method is changeable
+            if (!((memoryClass.isMainClass && memoryMethod.isMainMethod())
+                    || !memoryMethod.isChangeable())) {
+
+                // get the method that was overridden
+                MemoryMethod overrideMethod = null;
+                for (MemoryMethod method : overriddenMethods) {
+                    if (method.equals(memoryMethod)) {
+                        overrideMethod = method;
+                    }
+                }
+
+                // if the method is not found
+                if (overrideMethod == null) {
+                    // generate the mapping
+                    String mapping = mapMethod(className, memoryClass, memoryMethod);
+
+                    // map the current method
+                    String description = memoryMethod.methodNode.desc;
+                    mappingManager.mapMethod(
+                            memoryMethod.methodNode.name,
+                            mapping,
+                            description.substring(description.indexOf(")") + 1),
+                            description
+                    );
+
+                    // if this is an annotation method
+                    if (isAnnotation) {
+
+                        // map the annotations for the current method
+                        mapAnnotations(memoryJar, memoryClass, memoryMethod, mapping);
+                    }
+                } else {
+
+                    // update the parenting hierarchy
+                    parenting.put(overrideMethod.methodNode.name + overrideMethod.methodNode.desc, overrideMethod.parent);
+                }
+            }
+        });
+
+        memoryClass.methods.forEach(memoryMethod -> {
+            if (parenting.containsKey(memoryMethod.methodNode.name + memoryMethod.methodNode.desc)) {
+                MemoryClass superClass = parenting.get(memoryMethod.methodNode.name + memoryMethod.methodNode.desc);
+                MethodMapping methodMapping = mappingManager.getMethod(
+                        superClass.classNode.name,
+                        memoryMethod.methodNode.name,
+                        memoryMethod.methodNode.desc
+                );
+                if (methodMapping != null) {
+                    mappingManager.mapMethod(
+                            memoryMethod.methodNode.name,
+                            mapMethod(className, memoryClass, memoryMethod),
+                            methodMapping.returnType,
+                            methodMapping.description
+                    );
+                }
+            }
+        });
+    }
+
+    void mapAnnotations(MemoryJar memoryJar, MemoryClass parentClass, MemoryMethod memoryMethod, String mapping) {
+        memoryJar.getClasses().forEach((className, memoryClass) -> {
+            if (!parentClass.equals(memoryClass)) {
+                mapAnnotation(memoryClass.classNode.visibleAnnotations, memoryMethod, mapping);
+                mapAnnotation(memoryClass.classNode.invisibleAnnotations, memoryMethod, mapping);
+
+                memoryClass.fields.forEach(memoryField -> {
+                    mapAnnotation(memoryField.fieldNode.visibleAnnotations, memoryMethod, mapping);
+                    mapAnnotation(memoryField.fieldNode.invisibleAnnotations, memoryMethod, mapping);
+                });
+                memoryClass.methods.forEach(method -> {
+                    mapAnnotation(method.methodNode.visibleAnnotations, memoryMethod, mapping);
+                    mapAnnotation(method.methodNode.invisibleAnnotations, memoryMethod, mapping);
+                });
+            }
+        });
+    }
+
+    void mapAnnotation(List<AnnotationNode> annotations, MemoryMethod memoryMethod, String mapping) {
+        if (annotations != null) {
+            for (AnnotationNode visibleAnnotation : annotations) {
+                int targetIndex = -1;
+                List<Object> values = visibleAnnotation.values;
+                for (int i = 0; i < values.size(); i++) {
+                    if (values.get(i).equals(memoryMethod.methodNode.name)) {
+                        targetIndex = i;
+                    }
+                }
+                visibleAnnotation.values.set(targetIndex, mapping);
+            }
+        }
+    }
+
+    void collectSuperMethods(MemoryClass memoryClass, List<MemoryMethod> methods) {
+        if (memoryClass == null) {
+            return;
+        }
+        memoryClass.methods.stream().filter(MemoryMethod::isChangeable).forEach(methods::add);
+        collectSuperMethods(memoryClass.superClass, methods);
     }
 
 }

@@ -10,6 +10,7 @@ import org.objectweb.asm.tree.InnerClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.io.IOException;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,7 +54,7 @@ public class MemoryClass {
         classNode.fields.forEach(fieldNode -> fields.add(new MemoryField(fieldNode)));
 
         // load all the methods into the memory
-        classNode.methods.forEach(methodNode -> methods.add(new MemoryMethod(methodNode)));
+        classNode.methods.forEach(methodNode -> methods.add(new MemoryMethod(this, methodNode)));
 
         // load all the inner classes into the memory
         classNode.innerClasses.forEach(innerClassNode -> {
@@ -168,7 +169,7 @@ public class MemoryClass {
         classNode.methods.add(methodNode);
 
         MemoryMethod memoryMethod;
-        methods.add(memoryMethod = new MemoryMethod(methodNode));
+        methods.add(memoryMethod = new MemoryMethod(this, methodNode));
         return memoryMethod;
     }
 
@@ -215,6 +216,10 @@ public class MemoryClass {
         return classNode.name.contains("$") && classNode.outerClass == null;
     }
 
+    public boolean isAnnotation() {
+        return Modifier.isInterface(classNode.access) && (classNode.access & Opcodes.ACC_ANNOTATION) != 0;
+    }
+
     /**
      * Checks if the class is an enum
      *
@@ -222,7 +227,7 @@ public class MemoryClass {
      */
 
     public boolean isEnum() {
-        return classNode.superName != null && classNode.superName.toLowerCase().contains("enum");
+        return (classNode.access & Opcodes.ACC_ENUM) != 0;
     }
 
     /**

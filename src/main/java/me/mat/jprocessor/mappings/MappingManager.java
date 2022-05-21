@@ -97,6 +97,10 @@ public class MappingManager {
         return reverseClassMappings.get(name);
     }
 
+    public MethodMapping getMethod(String className, String name, String description) {
+        return methodMappings.getOrDefault(className, new ArrayList<>()).stream().filter(mm -> mm.name.equals(name) && mm.description.equals(description)).findFirst().orElse(null);
+    }
+
     /**
      * Maps a class by its name and mapping
      *

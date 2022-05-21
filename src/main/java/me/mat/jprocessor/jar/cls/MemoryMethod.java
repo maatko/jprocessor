@@ -9,7 +9,14 @@ import org.objectweb.asm.tree.MethodNode;
 public class MemoryMethod {
 
     @NonNull
+    public MemoryClass parent;
+
+    @NonNull
     public MethodNode methodNode;
+
+    public boolean isChangeable() {
+        return ASMUtil.isChangeable(methodNode);
+    }
 
     /**
      * Checks if the method is a main method

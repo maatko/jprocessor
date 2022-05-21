@@ -2,6 +2,7 @@ package me.mat.jprocessor.mappings.generation.generator.impl;
 
 import me.mat.jprocessor.jar.cls.MemoryClass;
 import me.mat.jprocessor.jar.cls.MemoryField;
+import me.mat.jprocessor.jar.cls.MemoryMethod;
 import me.mat.jprocessor.mappings.generation.generator.MappingGenerator;
 
 public class AlphabetMappingGenerator extends MappingGenerator {
@@ -9,16 +10,23 @@ public class AlphabetMappingGenerator extends MappingGenerator {
     private final NameGenerator classNameGenerator = new NameGenerator();
 
     private NameGenerator fieldNameGenerator;
+    private NameGenerator methodNameGenerator;
 
     @Override
     public String mapClass(String className, MemoryClass memoryClass) {
         this.fieldNameGenerator = new NameGenerator();
+        this.methodNameGenerator = new NameGenerator();
         return classNameGenerator.generate();
     }
 
     @Override
     public String mapField(String className, MemoryClass memoryClass, MemoryField memoryField) {
         return fieldNameGenerator.generate();
+    }
+
+    @Override
+    public String mapMethod(String className, MemoryClass memoryClass, MemoryMethod memoryMethod) {
+        return methodNameGenerator.generate();
     }
 
     private static final class NameGenerator {
