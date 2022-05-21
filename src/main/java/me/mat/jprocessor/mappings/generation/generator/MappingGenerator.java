@@ -243,12 +243,16 @@ public abstract class MappingGenerator {
             for (AnnotationNode visibleAnnotation : annotations) {
                 int targetIndex = -1;
                 List<Object> values = visibleAnnotation.values;
-                for (int i = 0; i < values.size(); i++) {
-                    if (values.get(i).equals(memoryMethod.methodNode.name)) {
-                        targetIndex = i;
+                if (values != null) {
+                    for (int i = 0; i < values.size(); i++) {
+                        if (values.get(i).equals(memoryMethod.methodNode.name)) {
+                            targetIndex = i;
+                        }
+                    }
+                    if (targetIndex != -1) {
+                        visibleAnnotation.values.set(targetIndex, mapping);
                     }
                 }
-                visibleAnnotation.values.set(targetIndex, mapping);
             }
         }
     }
