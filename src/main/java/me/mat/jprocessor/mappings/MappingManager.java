@@ -90,17 +90,6 @@ public class MappingManager {
         this.unMapping = false;
     }
 
-    public Mapping getClass(String name) {
-        if (classMappings.containsKey(name)) {
-            return classMappings.get(name);
-        }
-        return reverseClassMappings.get(name);
-    }
-
-    public MethodMapping getMethod(String className, String name, String description) {
-        return methodMappings.getOrDefault(className, new ArrayList<>()).stream().filter(mm -> mm.name.equals(name) && mm.description.equals(description)).findFirst().orElse(null);
-    }
-
     /**
      * Maps a class by its name and mapping
      *
@@ -179,6 +168,33 @@ public class MappingManager {
 
     public void mapMethod(String name, String mapping, String returnType, String description) {
         mapMethod(name, mapping, returnType, returnType, description, description);
+    }
+
+    /**
+     * Gets a class mapping by the name of the class
+     *
+     * @param name name of the class that you want to retrive
+     * @return {@link Mapping}
+     */
+
+    public Mapping getClass(String name) {
+        if (classMappings.containsKey(name)) {
+            return classMappings.get(name);
+        }
+        return reverseClassMappings.get(name);
+    }
+
+    /**
+     * Gets a method mapping by the class, name and description
+     *
+     * @param className   name of the class that the method is in
+     * @param name        name of the method that you want to get the mapping for
+     * @param description description of the method that you want to get the mapping for
+     * @return {@link MethodMapping}
+     */
+
+    public MethodMapping getMethod(String className, String name, String description) {
+        return methodMappings.getOrDefault(className, new ArrayList<>()).stream().filter(mm -> mm.name.equals(name) && mm.description.equals(description)).findFirst().orElse(null);
     }
 
     /**

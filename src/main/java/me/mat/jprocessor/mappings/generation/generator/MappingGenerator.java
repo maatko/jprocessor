@@ -171,15 +171,26 @@ public abstract class MappingGenerator {
             }
         });
 
+        // loop through all the methods
         memoryClass.methods.forEach(memoryMethod -> {
-            if (parenting.containsKey(memoryMethod.methodNode.name + memoryMethod.methodNode.desc)) {
-                MemoryClass superClass = parenting.get(memoryMethod.methodNode.name + memoryMethod.methodNode.desc);
+
+            // get the description of the method
+            String description = memoryMethod.methodNode.name + memoryMethod.methodNode.desc;
+
+            // check if the method is an override
+            if (parenting.containsKey(description)) {
+
+                // get the method that was overridden
                 MethodMapping methodMapping = mappingManager.getMethod(
-                        superClass.classNode.name,
+                        parenting.get(description).classNode.name,
                         memoryMethod.methodNode.name,
                         memoryMethod.methodNode.desc
                 );
+
+                // if the method was found
                 if (methodMapping != null) {
+
+                    // map the current method to the mapping of the method that it overrode
                     mappingManager.mapMethod(
                             memoryMethod.methodNode.name,
                             mapMethod(className, memoryClass, memoryMethod),
@@ -190,6 +201,16 @@ public abstract class MappingGenerator {
             }
         });
     }
+
+    /**
+     * Maps the annotation in all the loaded
+     * classes in the jar
+     *
+     * @param memoryJar    handle of the current MemoryJar
+     * @param parentClass  class of the annotation that it will be checked for
+     * @param memoryMethod target method of the annotation
+     * @param mapping      mapping that was generated for the provided method
+     */
 
     void mapAnnotations(MemoryJar memoryJar, MemoryClass parentClass, MemoryMethod memoryMethod, String mapping) {
         memoryJar.getClasses().forEach((className, memoryClass) -> {
@@ -209,6 +230,14 @@ public abstract class MappingGenerator {
         });
     }
 
+    /**
+     * Maps annotations for the current method mapping
+     *
+     * @param annotations  list of annotations that you want to check
+     * @param memoryMethod target method of the annotation
+     * @param mapping      mapping that was generated for the provided method
+     */
+
     void mapAnnotation(List<AnnotationNode> annotations, MemoryMethod memoryMethod, String mapping) {
         if (annotations != null) {
             for (AnnotationNode visibleAnnotation : annotations) {
@@ -223,6 +252,14 @@ public abstract class MappingGenerator {
             }
         }
     }
+
+    /**
+     * Collects all the methods from the super classes
+     * into a provided list
+     *
+     * @param memoryClass super class that you want to collect from first
+     * @param methods     a list of methods that the methods will be placed into
+     */
 
     void collectSuperMethods(MemoryClass memoryClass, List<MemoryMethod> methods) {
         if (memoryClass == null) {
