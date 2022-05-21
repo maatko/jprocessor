@@ -24,11 +24,21 @@ public class JarUtil {
 
     private static final String CLASS_SUFFIX = ".class";
 
+    /**
+     * Returns the main class of the application
+     *
+     * @param file jar file that you want to retrive the main class for
+     * @return {@link String}
+     */
+
     public static String getMainClass(File file) {
         try (JarFile jarFile = new JarFile(file)) {
+            if (!jarFile.getManifest().getMainAttributes().containsKey("Main-Class")) {
+                return "";
+            }
             return jarFile.getManifest().getMainAttributes().getValue("Main-Class");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            return "";
         }
     }
 
