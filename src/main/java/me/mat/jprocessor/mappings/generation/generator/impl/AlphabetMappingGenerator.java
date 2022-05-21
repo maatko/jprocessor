@@ -1,93 +1,24 @@
 package me.mat.jprocessor.mappings.generation.generator.impl;
 
-import me.mat.jprocessor.jar.MemoryJar;
 import me.mat.jprocessor.jar.cls.MemoryClass;
-import me.mat.jprocessor.mappings.MappingManager;
+import me.mat.jprocessor.jar.cls.MemoryField;
 import me.mat.jprocessor.mappings.generation.generator.MappingGenerator;
-import me.mat.jprocessor.mappings.mapping.Mapping;
-import org.objectweb.asm.tree.InnerClassNode;
 
-public class AlphabetMappingGenerator implements MappingGenerator {
+public class AlphabetMappingGenerator extends MappingGenerator {
 
-    private MappingManager mappingManager;
+    private final NameGenerator classNameGenerator = new NameGenerator();
 
-    private NameGenerator classNameGenerator;
     private NameGenerator fieldNameGenerator;
-    private NameGenerator methodNameGenerator;
 
     @Override
-    public void generate(String className, MemoryJar memoryJar, MemoryClass memoryClass) {
-        // reset the generator
-        if (reset(memoryClass) || memoryClass.isMainClass) {
-            return;
-        }
-
-        // clear all the inner class nodes from the class
-        memoryClass.classNode.innerClasses.clear();
-
-        // generate a mapping for the current class
-        mappingManager.mapClass(className, classNameGenerator.generate());
-
-        // make sure that the class is not an enum
-        if (!memoryClass.isEnum()) {
-
-            // generate mappings for all the fields in the current class
-            memoryClass.fields.forEach(memoryField -> mappingManager.mapField(
-                    memoryField.fieldNode.name,
-                    fieldNameGenerator.generate(),
-                    memoryField.fieldNode.desc
-            ));
-        }
-    }
-
-    @Override
-    public void generateInner(String className, MemoryJar memoryJar, MemoryClass memoryClass) {
-        // reset the generator
-        if (!reset(memoryClass) || memoryClass.isMainClass) {
-            return;
-        }
-
-        // if the class does not have an outer class
-        if (memoryClass.outerClass == null) {
-            // return out of the method
-            return;
-        }
-
-        // get the mapping
-        Mapping mapping = mappingManager.getClass(memoryClass.classNode.outerClass);
-
-        // get the outer name
-        String outerName = mapping != null ? mapping.mapping : memoryClass.classNode.outerClass;
-
-        // update the outer name of the class node
-        memoryClass.classNode.outerClass = outerName;
-
-        // generate the mapping
-        String innerClassMapping = outerName + "$" + classNameGenerator.generate();
-
-        // generate a mapping for the current class
-        mappingManager.mapClass(className, innerClassMapping);
-
-        // add the inner class
-        memoryClass.outerClass.classNode.innerClasses.add(new InnerClassNode(
-                innerClassMapping,
-                null,
-                null,
-                0
-        ));
-    }
-
-    @Override
-    public void manager(MappingManager mappingManager) {
-        this.mappingManager = mappingManager;
-        this.classNameGenerator = new NameGenerator();
-    }
-
-    boolean reset(MemoryClass memoryClass) {
+    public String mapClass(String className, MemoryClass memoryClass) {
         this.fieldNameGenerator = new NameGenerator();
-        this.methodNameGenerator = new NameGenerator();
+        return classNameGenerator.generate();
+    }
 
-        return memoryClass.isInnerClass;
+    @Override
+    public String mapField(String className, MemoryClass memoryClass, MemoryField memoryField) {
+        return fieldNameGenerator.generate();
     }
 
     private static final class NameGenerator {

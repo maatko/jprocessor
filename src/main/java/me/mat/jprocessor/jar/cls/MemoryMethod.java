@@ -11,16 +11,14 @@ public class MemoryMethod {
     @NonNull
     public MethodNode methodNode;
 
-    public OverrideMethod originalMethod;
-
     /**
-     * Checks if this method is an override method from previous parent classes
+     * Checks if the method is a main method
      *
      * @return {@link Boolean}
      */
 
-    public boolean isOverride() {
-        return originalMethod != null;
+    public boolean isMainMethod() {
+        return methodNode.name.equals("main") && methodNode.desc.equals("([Ljava/lang/String;)V");
     }
 
     /**
@@ -38,18 +36,6 @@ public class MemoryMethod {
             return false;
         }
         return ASMUtil.isSameMethod(((MemoryMethod) obj).methodNode, methodNode);
-    }
-
-    public static final class OverrideMethod extends MemoryMethod {
-
-        @NonNull
-        public MemoryClass parentClass;
-
-        public OverrideMethod(@NonNull MemoryClass parentClass, @NonNull MethodNode methodNode) {
-            super(methodNode);
-            this.parentClass = parentClass;
-        }
-
     }
 
 }

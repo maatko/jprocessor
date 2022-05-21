@@ -53,9 +53,6 @@ public class MemoryJar {
         // log to console that the
         JProcessor.Logging.info("Setting up the class hierarchy");
 
-        // build the class hierarchy
-        classes.forEach((className, memoryClass) -> memoryClass.findOverrides(memoryClass.superClass));
-
         // get the main class of the jar
         String mainClass = JarUtil.getMainClass(file).replaceAll("\\.", "/");
         if (classes.containsKey(mainClass)) {
@@ -125,8 +122,6 @@ public class MemoryJar {
         classes.put(name, memoryClass);
 
         memoryClass.initialize(classes);
-        memoryClass.findOverrides(memoryClass.superClass);
-
         return memoryClass;
     }
 

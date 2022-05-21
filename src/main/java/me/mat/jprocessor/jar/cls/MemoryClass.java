@@ -6,6 +6,7 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.InnerClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.io.IOException;
@@ -69,21 +70,34 @@ public class MemoryClass {
     }
 
     /**
-     * Finds all the methods that this class overrides from parenting classes
+     * Adds an inner class to the current class in memory
      *
-     * @param superClass super that that will be searched
+     * @param access    access of the inner class
+     * @param name      name of the inner class
+     * @param outerName outer name of the inner class
+     * @param innerName inner name of the inner class
+     * @return {@link MemoryInnerClass}
      */
 
-    public void findOverrides(MemoryClass superClass) {
-        if (superClass == null) {
-            return;
-        }
+    public MemoryInnerClass addInnerClass(int access, String name, String outerName, String innerName) {
+        InnerClassNode innerClassNode = new InnerClassNode(name, outerName, innerName, access);
+        classNode.innerClasses.add(innerClassNode);
 
-        methods.forEach(memoryMethod
-                -> superClass.methods.stream().filter(memoryMethod::equals).findFirst().ifPresent(mm
-                -> memoryMethod.originalMethod = new MemoryMethod.OverrideMethod(superClass, mm.methodNode)));
+        MemoryInnerClass memoryInnerClass = new MemoryInnerClass(innerClassNode);
+        innerClasses.put(name, memoryInnerClass);
+        return memoryInnerClass;
+    }
 
-        findOverrides(superClass.superClass);
+    /**
+     * Adds an inner class to the current class in memory
+     *
+     * @param access access of the inner class
+     * @param name   name of the inner class
+     * @return {@link MemoryInnerClass}
+     */
+
+    public MemoryInnerClass addInnerClass(int access, String name) {
+        return addInnerClass(access, name, null, null);
     }
 
     /**
@@ -156,6 +170,14 @@ public class MemoryClass {
         MemoryMethod memoryMethod;
         methods.add(memoryMethod = new MemoryMethod(methodNode));
         return memoryMethod;
+    }
+
+    public MemoryMethod getMethod(MemoryMethod memoryMethod) {
+        return getMethod(memoryMethod.methodNode.name, memoryMethod.methodNode.desc);
+    }
+
+    public MemoryMethod getMethod(String name, String description) {
+        return methods.stream().filter(memoryMethod -> memoryMethod.methodNode.name.equals(name) && memoryMethod.methodNode.desc.equals(description)).findFirst().orElse(null);
     }
 
     /**

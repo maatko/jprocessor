@@ -7,7 +7,6 @@ import com.google.gson.JsonObject;
 import lombok.Getter;
 import me.mat.jprocessor.JProcessor;
 import me.mat.jprocessor.jar.MemoryJar;
-import me.mat.jprocessor.jar.cls.MemoryClass;
 import me.mat.jprocessor.mappings.generation.MappingGenerateException;
 import me.mat.jprocessor.mappings.generation.generator.MappingGenerator;
 import me.mat.jprocessor.mappings.mapping.FieldMapping;
@@ -77,15 +76,10 @@ public class MappingManager {
         JProcessor.Logging.info("Generating mappings");
 
         // update the manager instance in the generator
-        mappingGenerator.manager(this);
+        mappingGenerator.setMappingManager(this);
 
-        Map<String, MemoryClass> classes = memoryJar.getClasses();
-
-        // loop through all the classes and generate the mappings for the class
-        classes.forEach((className, memoryClass) -> mappingGenerator.generate(className, memoryJar, memoryClass));
-
-        // loop through all the inner classes are generated their mappings
-        classes.forEach((className, memoryClass) -> mappingGenerator.generateInner(className, memoryJar, memoryClass));
+        // generate mappings for the provided jar
+        mappingGenerator.map(memoryJar);
 
         // log the generated data to the console
         JProcessor.Logging.info("Generated '%d' class mappings", classMappings.size());

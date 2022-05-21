@@ -5,13 +5,25 @@ import lombok.NoArgsConstructor;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ASMUtil {
 
     private static final Map<String, String> TYPE_CONVERSION = new HashMap<>();
+
+    private static final List<String> IGNORED = Arrays.asList(
+            "valueOf",
+            "values",
+            "ordinal",
+            "toString",
+            "hashCode"
+    );
+
 
     /**
      * Checks if the provided method nodes are the same
@@ -55,6 +67,27 @@ public class ASMUtil {
             type = type.substring(0, type.indexOf("["));
         }
         return prefix + TYPE_CONVERSION.getOrDefault(type.toLowerCase(), !type.isEmpty() ? "L" + type + ";" : type);
+    }
+
+
+    /**
+     * Checks if the method node
+     * can be changed by the renamer
+     *
+     * @param methodNode that you want to check against
+     * @return true/false depending if it can be changed or not
+     */
+
+    public static boolean isChangeable(MethodNode methodNode) {
+        if (Modifier.isNative(methodNode.access))
+            return false;
+        if (methodNode.name.startsWith("<"))
+            return false;
+        if (methodNode.name.contains("$"))
+            return false;
+        if (IGNORED.contains(methodNode.name))
+            return false;
+        return true;
     }
 
     static {
