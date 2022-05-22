@@ -33,7 +33,7 @@ public class JarUtil {
 
     public static String getMainClass(File file) {
         try (JarFile jarFile = new JarFile(file)) {
-            if (!jarFile.getManifest().getMainAttributes().containsKey("Main-Class")) {
+            if (jarFile.getManifest().getMainAttributes().getValue("Main-Class") == null) {
                 return "";
             }
             return jarFile.getManifest().getMainAttributes().getValue("Main-Class");

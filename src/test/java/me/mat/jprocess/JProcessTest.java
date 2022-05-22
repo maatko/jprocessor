@@ -90,7 +90,7 @@ public class JProcessTest {
         // generate the mappings for the current jar
         MappingManager mappingManager;
         try {
-            mappingManager = JProcessor.Mapping.generate(GenerationType.ALPHABET, memoryJar);
+            mappingManager = JProcessor.Mapping.generate(GenerationType.RANDOM, memoryJar);
         } catch (MappingGenerateException e) {
             throw new RuntimeException(e);
         }

@@ -10,14 +10,10 @@ import me.mat.jprocessor.mappings.mapping.Mapping;
 import me.mat.jprocessor.mappings.mapping.MethodMapping;
 import org.objectweb.asm.tree.AnnotationNode;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public abstract class MappingGenerator {
-
-    private final Map<String, MemoryClass> parenting = new HashMap<>();
 
     @Setter
     protected MappingManager mappingManager;
@@ -54,6 +50,15 @@ public abstract class MappingGenerator {
                 // generate mappings for the current class
                 generateClass(className, memoryJar, memoryClass);
             }
+        });
+
+        // map all method overrides
+        classes.forEach((className, memoryClass) -> {
+            // get the mapping for the current class
+            Mapping classMapping = mappingManager.getClass(className);
+
+            // map all the current class overrides
+            mapOverrides(memoryClass, classMapping != null ? classMapping.mapping : className);
         });
     }
 
@@ -111,93 +116,61 @@ public abstract class MappingGenerator {
             ));
         }
 
-        // create a list that will contain all the methods that might be overridden in the current class
-        List<MemoryMethod> overriddenMethods = new ArrayList<>();
-
-        // collect all the methods from the super classes
-        collectSuperMethods(memoryClass.superClass, overriddenMethods);
-
-        // collect all the methods from the extended interfaces
-        List<String> interfaces = memoryClass.classNode.interfaces;
-        if (interfaces != null && !interfaces.isEmpty()) {
-            interfaces.forEach(inf -> {
-                MemoryClass interfaceClass = memoryJar.getClass(inf);
-                if (interfaceClass != null) {
-                    collectSuperMethods(interfaceClass, overriddenMethods);
-                }
-            });
-        }
-
         // loop through all the methods in the class and map them
-        memoryClass.methods.forEach(memoryMethod -> {
+        memoryClass.methods.stream().filter(MemoryMethod::isChangeable).forEach(memoryMethod -> {
+            // if the method is not found
+            if (!memoryMethod.isOverride()) {
+                // generate the mapping
+                String mapping = mapMethod(className, memoryClass, memoryMethod);
 
-            // check if method is changeable
-            if (!((memoryClass.isMainClass && memoryMethod.isMainMethod())
-                    || !memoryMethod.isChangeable())) {
+                // map the current method
+                String description = memoryMethod.methodNode.desc;
+                mappingManager.mapMethod(
+                        memoryMethod.methodNode.name,
+                        mapping,
+                        description.substring(description.indexOf(")") + 1),
+                        description
+                );
 
-                // get the method that was overridden
-                MemoryMethod overrideMethod = null;
-                for (MemoryMethod method : overriddenMethods) {
-                    if (method.equals(memoryMethod)) {
-                        overrideMethod = method;
-                    }
-                }
+                // if this is an annotation method
+                if (isAnnotation) {
 
-                // if the method is not found
-                if (overrideMethod == null) {
-                    // generate the mapping
-                    String mapping = mapMethod(className, memoryClass, memoryMethod);
-
-                    // map the current method
-                    String description = memoryMethod.methodNode.desc;
-                    mappingManager.mapMethod(
-                            memoryMethod.methodNode.name,
-                            mapping,
-                            description.substring(description.indexOf(")") + 1),
-                            description
-                    );
-
-                    // if this is an annotation method
-                    if (isAnnotation) {
-
-                        // map the annotations for the current method
-                        mapAnnotations(memoryJar, memoryClass, memoryMethod, mapping);
-                    }
-                } else {
-
-                    // update the parenting hierarchy
-                    parenting.put(overrideMethod.methodNode.name + overrideMethod.methodNode.desc, overrideMethod.parent);
+                    // map the annotations for the current method
+                    mapAnnotations(memoryJar, memoryClass, memoryMethod, mapping);
                 }
             }
         });
+    }
 
-        // loop through all the methods
-        memoryClass.methods.forEach(memoryMethod -> {
+    /**
+     * Maps any override methods in the provided class
+     *
+     * @param memoryClass  class that you want to map the overrides for
+     * @param classMapping mapping of the class that you want to map the overrides for
+     */
 
-            // get the description of the method
-            String description = memoryMethod.methodNode.name + memoryMethod.methodNode.desc;
+    void mapOverrides(MemoryClass memoryClass, String classMapping) {
+        // select the current class as the target for the mapping manager
+        mappingManager.mapClass(memoryClass.classNode.name, classMapping);
 
-            // check if the method is an override
-            if (parenting.containsKey(description)) {
+        // loop through all the override methods
+        memoryClass.methods.stream().filter(MemoryMethod::isOverride).forEach(memoryMethod -> {
+            // get the method that was overridden
+            MethodMapping methodMapping = mappingManager.getMethod(
+                    memoryMethod.baseClass.classNode.name,
+                    memoryMethod.baseMethod.methodNode.name,
+                    memoryMethod.baseMethod.methodNode.desc
+            );
 
-                // get the method that was overridden
-                MethodMapping methodMapping = mappingManager.getMethod(
-                        parenting.get(description).classNode.name,
-                        memoryMethod.methodNode.name,
-                        memoryMethod.methodNode.desc
+            // if the method was found
+            if (methodMapping != null) {
+                // map the current method to the mapping of the method that it overrode
+                mappingManager.mapMethod(
+                        memoryMethod.baseMethod.methodNode.name,
+                        methodMapping.mapping,
+                        methodMapping.returnType,
+                        methodMapping.description
                 );
-
-                // if the method was found
-                if (methodMapping != null) {
-
-                    // map the current method to the mapping of the method that it overrode
-                    mappingManager.mapMethod(
-                            memoryMethod.methodNode.name,
-                            mapMethod(className, memoryClass, memoryMethod),
-                            methodMapping.returnType,
-                            methodMapping.description
-                    );
-                }
             }
         });
     }
@@ -255,22 +228,6 @@ public abstract class MappingGenerator {
                 }
             }
         }
-    }
-
-    /**
-     * Collects all the methods from the super classes
-     * into a provided list
-     *
-     * @param memoryClass super class that you want to collect from first
-     * @param methods     a list of methods that the methods will be placed into
-     */
-
-    void collectSuperMethods(MemoryClass memoryClass, List<MemoryMethod> methods) {
-        if (memoryClass == null) {
-            return;
-        }
-        memoryClass.methods.stream().filter(MemoryMethod::isChangeable).forEach(methods::add);
-        collectSuperMethods(memoryClass.superClass, methods);
     }
 
 }

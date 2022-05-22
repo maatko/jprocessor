@@ -23,6 +23,8 @@ public class MemoryClass {
 
     public final Map<String, MemoryInnerClass> innerClasses = new HashMap<>();
 
+    public final Map<String, MemoryClass> interfaces = new HashMap<>();
+
     public final List<MemoryField> fields = new ArrayList<>();
 
     public final List<MemoryMethod> methods = new ArrayList<>();
@@ -66,8 +68,38 @@ public class MemoryClass {
             innerClasses.put(innerClassNode.name, innerClass);
         });
 
+        // find all the extended interfaces
+        List<String> interfaces = classNode.interfaces;
+        if (interfaces != null) {
+            interfaces.forEach(className -> {
+                if (classes.containsKey(className)) {
+                    this.interfaces.put(className, classes.get(className));
+                }
+            });
+        }
+
         // find the super class
         this.findSuperClass(classes);
+    }
+
+    public void buildHierarchy(Map<String, MemoryClass> classes) {
+        // collect all the super classes that might have overrides
+        List<MemoryClass> superClasses = new ArrayList<>(interfaces.values());
+        findSuperClasses(superClass, superClasses);
+
+        // loop through all the super classes and check for current class method overrides
+        superClasses.forEach(memoryClass
+                -> memoryClass.methods.forEach(override
+                -> methods.forEach(method
+                -> method.checkForOverride(memoryClass, override))));
+    }
+
+    void findSuperClasses(MemoryClass memoryClass, List<MemoryClass> superClasses) {
+        if (memoryClass == null) {
+            return;
+        }
+        superClasses.add(memoryClass);
+        findSuperClasses(memoryClass.superClass, superClasses);
     }
 
     /**
@@ -216,8 +248,15 @@ public class MemoryClass {
         return classNode.name.contains("$") && classNode.outerClass == null;
     }
 
+    /**
+     * Checks if the current class
+     * is an annotation class
+     *
+     * @return {@link Boolean}
+     */
+
     public boolean isAnnotation() {
-        return Modifier.isInterface(classNode.access) && (classNode.access & Opcodes.ACC_ANNOTATION) != 0;
+        return Modifier.isInterface(classNode.access) && hasModifier(Opcodes.ACC_ANNOTATION);
     }
 
     /**
@@ -227,7 +266,7 @@ public class MemoryClass {
      */
 
     public boolean isEnum() {
-        return (classNode.access & Opcodes.ACC_ENUM) != 0;
+        return hasModifier(Opcodes.ACC_ENUM);
     }
 
     /**
@@ -241,6 +280,17 @@ public class MemoryClass {
         if (superName != null && classes.containsKey(superName)) {
             superClass = classes.get(superName);
         }
+    }
+
+    /**
+     * Checks if the class has the provided access modifier
+     *
+     * @param modifier modifier that you want to check for
+     * @return {@link Boolean}
+     */
+
+    boolean hasModifier(int modifier) {
+        return (classNode.access & modifier) != 0;
     }
 
 }

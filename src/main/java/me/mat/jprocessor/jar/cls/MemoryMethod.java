@@ -14,8 +14,35 @@ public class MemoryMethod {
     @NonNull
     public MethodNode methodNode;
 
+    public MemoryClass baseClass = null;
+    public MemoryMethod baseMethod = null;
+
+    protected void checkForOverride(MemoryClass baseClass, MemoryMethod baseMethod) {
+        if (equals(baseMethod)) {
+            this.baseClass = baseClass;
+            this.baseMethod = baseMethod;
+        }
+    }
+
+    /**
+     * Checks if the method can be remapped
+     *
+     * @return {@link Boolean}
+     */
+
     public boolean isChangeable() {
-        return ASMUtil.isChangeable(methodNode);
+        return ASMUtil.isChangeable(methodNode) && !isMainMethod();
+    }
+
+    /**
+     * Checks if the method overrides a method
+     * from one of the super classes
+     *
+     * @return {@link Boolean}
+     */
+
+    public boolean isOverride() {
+        return baseClass != null && baseMethod != null;
     }
 
     /**

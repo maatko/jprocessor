@@ -40,6 +40,7 @@ public class MemoryJar {
 
         // setup the class hierarchy
         classes.forEach((className, memoryClass) -> memoryClass.initialize(classes));
+        classes.forEach((className, memoryClass) -> memoryClass.buildHierarchy(classes));
 
         // log to console how many classes were loaded
         JProcessor.Logging.info("Loaded '%d' classes into memory", classes.size());

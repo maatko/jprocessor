@@ -34,7 +34,7 @@ public class ASMUtil {
      */
 
     public static boolean isSameMethod(MethodNode first, MethodNode second) {
-        return first.name.equals(second.name) && first.desc.equals(second.desc) && first.access == second.access;
+        return first.name.equals(second.name) && first.desc.equals(second.desc);
     }
 
 
