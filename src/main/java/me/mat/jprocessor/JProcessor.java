@@ -10,6 +10,7 @@ import me.mat.jprocessor.mappings.MappingType;
 import me.mat.jprocessor.mappings.generation.GenerationType;
 import me.mat.jprocessor.mappings.generation.MappingGenerateCallback;
 import me.mat.jprocessor.mappings.generation.MappingGenerateException;
+import me.mat.jprocessor.mappings.generation.generator.MappingGenerator;
 import me.mat.jprocessor.util.log.ConsoleLoggerImpl;
 import me.mat.jprocessor.util.log.Logger;
 
@@ -98,26 +99,51 @@ public class JProcessor {
          */
 
         public static MappingManager generate(GenerationType generationType, MemoryJar memoryJar) throws MappingGenerateException {
-            return new MappingManager(generationType.getMappingGenerator(), memoryJar);
+            return generate(generationType.getMappingGenerator(), memoryJar);
+        }
+
+        /**
+         * Generates mappings for the loaded memory jar
+         * based on the provided generation type
+         *
+         * @param generator generate that you want to use to generate the mappings
+         * @param memoryJar jar that you want to generate mappings for
+         * @return {@link MappingManager}
+         * @throws MappingGenerateException
+         */
+
+        public static MappingManager generate(MappingGenerator generator, MemoryJar memoryJar) throws MappingGenerateException {
+            return new MappingManager(generator, memoryJar);
         }
 
         /**
          * Generates mappings for the loaded memory jar
          * asynchronously based on the provided generation type
          *
-         * @param generationType type of the mapping generator that you want to use
-         * @param memoryJar      jar that you want to generate mappings for
+         * @param mappingGenerator generator that you want to use to generate mappings for
+         * @param memoryJar        jar that you want to generate mappings for
          */
 
-
-        public static void generate(GenerationType generationType, MemoryJar memoryJar, MappingGenerateCallback callback) {
+        public static void generate(MappingGenerator mappingGenerator, MemoryJar memoryJar, MappingGenerateCallback callback) {
             EXECUTOR_SERVICE.submit(() -> {
                 try {
-                    callback.onFinish(generate(generationType, memoryJar));
+                    callback.onFinish(generate(mappingGenerator, memoryJar));
                 } catch (MappingGenerateException e) {
                     callback.onFail(e.getMessage());
                 }
             });
+        }
+
+        /**
+         * Generates mappings for the loaded memory jar
+         * asynchronously based on the provided generation type
+         *
+         * @param generationType type of mappings that you want to generate
+         * @param memoryJar      jar that you want to generate mappings for
+         */
+
+        public static void generate(GenerationType generationType, MemoryJar memoryJar, MappingGenerateCallback callback) {
+            generate(generationType.getMappingGenerator(), memoryJar, callback);
         }
 
         /**

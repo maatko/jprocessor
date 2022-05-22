@@ -3,10 +3,10 @@ package me.mat.jprocessor.jar;
 import lombok.Getter;
 import me.mat.jprocessor.JProcessor;
 import me.mat.jprocessor.jar.cls.MemoryClass;
+import me.mat.jprocessor.jar.cls.MemoryManifest;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.util.JarUtil;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.commons.ClassRemapper;
 import org.objectweb.asm.commons.SimpleRemapper;
 import org.objectweb.asm.tree.ClassNode;
 
@@ -24,12 +24,17 @@ public class MemoryJar {
 
     private final Map<String, MemoryResource> resources = new HashMap<>();
 
+    private MemoryManifest manifest;
+
     public MemoryJar(File file) {
         // log to console that the jar's classes are loading into the memory
         JProcessor.Logging.info("Loading '%s' into memory", file.getName());
 
         // load all the classes into the memory
         JarUtil.load(file).forEach(classNode -> classes.put(classNode.name, new MemoryClass(classNode)));
+
+        // load the manifest from the jar file
+        this.manifest = new MemoryManifest(file);
 
         // attempt to fix broken inner classes
         classes.forEach((className, memoryClass) -> {
@@ -135,15 +140,22 @@ public class MemoryJar {
      * Saves the jar from memory
      * to a file on the disk
      *
-     * @param file file that you want to save to
+     * @param file    file that you want to save to
+     * @param comment comment on the output jar file
      */
 
-    public void save(File file) {
+    public void save(File file, String comment) {
         // log to console that the jar from memory is being saved to a file
         JProcessor.Logging.info("Saving the jar from memory to '%s'", file.getAbsolutePath());
 
         // create the jar output stream
-        try (JarOutputStream out = new JarOutputStream(Files.newOutputStream(file.toPath()))) {
+        try (JarOutputStream out = new JarOutputStream(Files.newOutputStream(file.toPath()), manifest.getManifest())) {
+
+            // if the comment is provided
+            if (comment != null) {
+                // set the jar comment
+                out.setComment(comment);
+            }
 
             // alert the user that classes are being written
             JProcessor.Logging.info("Writing %d classes...", classes.size());
@@ -165,6 +177,17 @@ public class MemoryJar {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Saves the jar from memory
+     * to a file on the disk
+     *
+     * @param file file that you want to save to
+     */
+
+    public void save(File file) {
+        save(file, null);
     }
 
     /**

@@ -215,7 +215,11 @@ public class MemoryClass {
         ClassRemapper adapter = new ClassRemapper(mappedNode, remapper);
 
         classNode.accept(adapter);
+        String mapping = remapper.map(classNode.name);
+
         classNode = mappedNode;
+        classNode.sourceFile = remapper.map(mapping);
+        classNode.sourceDebug = null;
     }
 
     /**

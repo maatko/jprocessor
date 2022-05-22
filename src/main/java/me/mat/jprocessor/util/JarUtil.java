@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 import java.util.stream.Stream;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -39,6 +40,21 @@ public class JarUtil {
             return jarFile.getManifest().getMainAttributes().getValue("Main-Class");
         } catch (Exception e) {
             return "";
+        }
+    }
+
+    /**
+     * Returns the Manifest of the provided jar file
+     *
+     * @param file file that you want to get the manifest for
+     * @return {@link Manifest}
+     */
+
+    public static Manifest getManifest(File file) throws IOException {
+        try (JarFile jarFile = new JarFile(file)) {
+            return jarFile.getManifest();
+        } catch (Exception e) {
+            throw new IOException(e);
         }
     }
 
@@ -67,7 +83,11 @@ public class JarUtil {
                 String name = jarEntry.getName();
 
                 // test it against the predicate
-                if (!name.endsWith(CLASS_SUFFIX) && !jarEntry.isDirectory()) {
+                if (!name.endsWith(CLASS_SUFFIX)
+                        && !jarEntry.isDirectory()
+                        && !name.endsWith("META-INF/MANIFEST.MF")
+                        && !name.endsWith(".SF")
+                        && !name.endsWith(".RSA")) {
 
                     // get the input stream from the jar for the current entry
                     InputStream inputStream = jarFile.getInputStream(jarEntry);
