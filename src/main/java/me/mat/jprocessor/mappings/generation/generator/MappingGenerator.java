@@ -79,15 +79,16 @@ public abstract class MappingGenerator {
             StringBuilder builder = new StringBuilder();
 
             // check if the class has an outer class if so generate an inner class mapping
-            if (memoryClass.outerClass != null) {
+            if (memoryClass.outerClass() != null) {
+
+                // get the outer class name
+                String outerClassName = memoryClass.outerClass().name();
+
                 // get the mapping
-                Mapping mapping = mappingManager.getClass(memoryClass.classNode.outerClass);
+                Mapping mapping = mappingManager.getClass(outerClassName);
 
                 // get the outer name
-                String outerName = mapping != null ? mapping.mapping : memoryClass.classNode.outerClass;
-
-                // update the outer name of the class node
-                memoryClass.classNode.outerClass = outerName;
+                String outerName = mapping != null ? mapping.mapping : outerClassName;
 
                 // build the mapping
                 builder.append(outerName);
@@ -95,7 +96,7 @@ public abstract class MappingGenerator {
                 builder.append(mapClass(className, memoryClass));
 
                 // add the inner class to the outer class inner class list
-                memoryClass.outerClass.addInnerClass(0, builder.toString());
+                memoryClass.outerClass().addInnerClass(0, builder.toString());
             } else {
                 // reset the builder with the correct mapping
                 builder = new StringBuilder(mapClass(className, memoryClass));
@@ -110,9 +111,9 @@ public abstract class MappingGenerator {
 
             // loop through all the fields in the class and map them
             memoryClass.fields.forEach(memoryField -> mappingManager.mapField(
-                    memoryField.fieldNode.name,
+                    memoryField.name(),
                     mapField(className, memoryClass, memoryField),
-                    memoryField.fieldNode.desc
+                    memoryField.description()
             ));
         }
 
@@ -124,9 +125,9 @@ public abstract class MappingGenerator {
                 String mapping = mapMethod(className, memoryClass, memoryMethod);
 
                 // map the current method
-                String description = memoryMethod.methodNode.desc;
+                String description = memoryMethod.description();
                 mappingManager.mapMethod(
-                        memoryMethod.methodNode.name,
+                        memoryMethod.name(),
                         mapping,
                         description.substring(description.indexOf(")") + 1),
                         description
@@ -151,22 +152,22 @@ public abstract class MappingGenerator {
 
     void mapOverrides(MemoryClass memoryClass, String classMapping) {
         // select the current class as the target for the mapping manager
-        mappingManager.mapClass(memoryClass.classNode.name, classMapping);
+        mappingManager.mapClass(memoryClass.name(), classMapping);
 
         // loop through all the override methods
         memoryClass.methods.stream().filter(MemoryMethod::isOverride).forEach(memoryMethod -> {
             // get the method that was overridden
             MethodMapping methodMapping = mappingManager.getMethod(
-                    memoryMethod.baseClass.classNode.name,
-                    memoryMethod.baseMethod.methodNode.name,
-                    memoryMethod.baseMethod.methodNode.desc
+                    memoryMethod.baseClass.name(),
+                    memoryMethod.baseMethod.name(),
+                    memoryMethod.baseMethod.description()
             );
 
             // if the method was found
             if (methodMapping != null) {
                 // map the current method to the mapping of the method that it overrode
                 mappingManager.mapMethod(
-                        memoryMethod.baseMethod.methodNode.name,
+                        memoryMethod.baseMethod.name(),
                         methodMapping.mapping,
                         methodMapping.returnType,
                         methodMapping.description
@@ -188,16 +189,16 @@ public abstract class MappingGenerator {
     void mapAnnotations(MemoryJar memoryJar, MemoryClass parentClass, MemoryMethod memoryMethod, String mapping) {
         memoryJar.getClasses().forEach((className, memoryClass) -> {
             if (!parentClass.equals(memoryClass)) {
-                mapAnnotation(memoryClass.classNode.visibleAnnotations, memoryMethod, mapping);
-                mapAnnotation(memoryClass.classNode.invisibleAnnotations, memoryMethod, mapping);
+                mapAnnotation(memoryClass.getVisibleAnnotations(), memoryMethod, mapping);
+                mapAnnotation(memoryClass.getInvisibleAnnotations(), memoryMethod, mapping);
 
                 memoryClass.fields.forEach(memoryField -> {
-                    mapAnnotation(memoryField.fieldNode.visibleAnnotations, memoryMethod, mapping);
-                    mapAnnotation(memoryField.fieldNode.invisibleAnnotations, memoryMethod, mapping);
+                    mapAnnotation(memoryField.getVisibleAnnotations(), memoryMethod, mapping);
+                    mapAnnotation(memoryField.getInvisibleAnnotations(), memoryMethod, mapping);
                 });
                 memoryClass.methods.forEach(method -> {
-                    mapAnnotation(method.methodNode.visibleAnnotations, memoryMethod, mapping);
-                    mapAnnotation(method.methodNode.invisibleAnnotations, memoryMethod, mapping);
+                    mapAnnotation(method.getVisibleAnnotations(), memoryMethod, mapping);
+                    mapAnnotation(method.getInvisibleAnnotations(), memoryMethod, mapping);
                 });
             }
         });
@@ -218,7 +219,7 @@ public abstract class MappingGenerator {
                 List<Object> values = visibleAnnotation.values;
                 if (values != null) {
                     for (int i = 0; i < values.size(); i++) {
-                        if (values.get(i).equals(memoryMethod.methodNode.name)) {
+                        if (values.get(i).equals(memoryMethod.name())) {
                             targetIndex = i;
                         }
                     }

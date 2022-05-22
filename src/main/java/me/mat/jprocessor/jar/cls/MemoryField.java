@@ -3,13 +3,56 @@ package me.mat.jprocessor.jar.cls;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import me.mat.jprocessor.util.asm.ASMUtil;
+import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.FieldNode;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 public class MemoryField {
 
     @NonNull
-    public FieldNode fieldNode;
+    private FieldNode fieldNode;
+
+    /**
+     * Gets the name of the field
+     *
+     * @return @{@link String}
+     */
+
+    public String name() {
+        return fieldNode.name;
+    }
+
+    /**
+     * Gets the description of the field
+     *
+     * @return @{@link String}
+     */
+
+    public String description() {
+        return fieldNode.desc;
+    }
+
+    /**
+     * Gets the visible annotations for the current field
+     *
+     * @return {@link List}
+     */
+
+    public List<AnnotationNode> getVisibleAnnotations() {
+        return fieldNode.visibleAnnotations;
+    }
+
+    /**
+     * Gets the invisible annotations for the current field
+     *
+     * @return {@link List}
+     */
+
+    public List<AnnotationNode> getInvisibleAnnotations() {
+        return fieldNode.invisibleAnnotations;
+    }
 
     /**
      * Checks if the provided object is equal to this object

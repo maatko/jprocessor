@@ -4,10 +4,9 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.InnerClassNode;
-import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.commons.ClassRemapper;
+import org.objectweb.asm.commons.SimpleRemapper;
+import org.objectweb.asm.tree.*;
 
 import java.io.IOException;
 import java.lang.reflect.Modifier;
@@ -30,10 +29,11 @@ public class MemoryClass {
     public final List<MemoryMethod> methods = new ArrayList<>();
 
     @NonNull
-    public ClassNode classNode;
+    private ClassNode classNode;
 
-    public MemoryClass outerClass;
-    public MemoryClass superClass;
+    private MemoryClass outerClass;
+
+    private MemoryClass superClass;
 
     public boolean isMainClass;
     public boolean isInnerClass;
@@ -82,7 +82,12 @@ public class MemoryClass {
         this.findSuperClass(classes);
     }
 
-    public void buildHierarchy(Map<String, MemoryClass> classes) {
+    /**
+     * Builds the class hierarchy aka
+     * finds all the override methods
+     */
+
+    public void buildHierarchy() {
         // collect all the super classes that might have overrides
         List<MemoryClass> superClasses = new ArrayList<>(interfaces.values());
         findSuperClasses(superClass, superClasses);
@@ -92,14 +97,6 @@ public class MemoryClass {
                 -> memoryClass.methods.forEach(override
                 -> methods.forEach(method
                 -> method.checkForOverride(memoryClass, override))));
-    }
-
-    void findSuperClasses(MemoryClass memoryClass, List<MemoryClass> superClasses) {
-        if (memoryClass == null) {
-            return;
-        }
-        superClasses.add(memoryClass);
-        findSuperClasses(memoryClass.superClass, superClasses);
     }
 
     /**
@@ -205,12 +202,20 @@ public class MemoryClass {
         return memoryMethod;
     }
 
-    public MemoryMethod getMethod(MemoryMethod memoryMethod) {
-        return getMethod(memoryMethod.methodNode.name, memoryMethod.methodNode.desc);
-    }
 
-    public MemoryMethod getMethod(String name, String description) {
-        return methods.stream().filter(memoryMethod -> memoryMethod.methodNode.name.equals(name) && memoryMethod.methodNode.desc.equals(description)).findFirst().orElse(null);
+    /**
+     * Maps the current class based on the
+     * mappings from the provided remapper
+     *
+     * @param remapper remapper that you want to use to remap this class
+     */
+
+    public void map(SimpleRemapper remapper) {
+        ClassNode mappedNode = new ClassNode();
+        ClassRemapper adapter = new ClassRemapper(mappedNode, remapper);
+
+        classNode.accept(adapter);
+        classNode = mappedNode;
     }
 
     /**
@@ -270,6 +275,69 @@ public class MemoryClass {
     }
 
     /**
+     * Returns the super class
+     *
+     * @return {@link MemoryClass}
+     */
+
+    public MemoryClass superClass() {
+        return superClass;
+    }
+
+    /**
+     * Returns the outer class
+     *
+     * @return {@link MemoryClass}
+     */
+
+    public MemoryClass outerClass() {
+        return outerClass;
+    }
+
+    /**
+     * Updates the current outer class
+     *
+     * @param memoryClass class that you want to set to
+     */
+
+    public void setOuterClass(MemoryClass memoryClass) {
+        this.outerClass = memoryClass;
+        this.classNode.outerClass = memoryClass.name();
+    }
+
+    /**
+     * Returns the name of the class
+     *
+     * @return {@link String}
+     */
+
+    public String name() {
+        return classNode.name;
+    }
+
+    /**
+     * Returns a list of visible annotations for
+     * the current class
+     *
+     * @return {@link List}
+     */
+
+    public List<AnnotationNode> getVisibleAnnotations() {
+        return classNode.visibleAnnotations;
+    }
+
+    /**
+     * Returns a list of invisible annotations for
+     * the current class
+     *
+     * @return {@link List}
+     */
+
+    public List<AnnotationNode> getInvisibleAnnotations() {
+        return classNode.invisibleAnnotations;
+    }
+
+    /**
      * Finds the super class from the loaded classes
      *
      * @param classes map of loaded classes for the loaded jar
@@ -280,6 +348,22 @@ public class MemoryClass {
         if (superName != null && classes.containsKey(superName)) {
             superClass = classes.get(superName);
         }
+    }
+
+    /**
+     * Finds all the super classes for the current class
+     * and loads them into a provided list
+     *
+     * @param memoryClass  super class that you want to begin the search with
+     * @param superClasses list that the super classes will be populated in
+     */
+
+    void findSuperClasses(MemoryClass memoryClass, List<MemoryClass> superClasses) {
+        if (memoryClass == null) {
+            return;
+        }
+        superClasses.add(memoryClass);
+        findSuperClasses(memoryClass.superClass, superClasses);
     }
 
     /**

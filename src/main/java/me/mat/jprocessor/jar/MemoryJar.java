@@ -34,13 +34,13 @@ public class MemoryJar {
         // attempt to fix broken inner classes
         classes.forEach((className, memoryClass) -> {
             if (memoryClass.isBrokenInnerClass()) {
-                memoryClass.classNode.outerClass = className.split("\\$")[0];
+                memoryClass.setOuterClass(classes.get(className.split("\\$")[0]));
             }
         });
 
         // setup the class hierarchy
         classes.forEach((className, memoryClass) -> memoryClass.initialize(classes));
-        classes.forEach((className, memoryClass) -> memoryClass.buildHierarchy(classes));
+        classes.forEach((className, memoryClass) -> memoryClass.buildHierarchy());
 
         // log to console how many classes were loaded
         JProcessor.Logging.info("Loaded '%d' classes into memory", classes.size());
@@ -70,13 +70,7 @@ public class MemoryJar {
 
     public void remap(MappingManager mappingManager) {
         SimpleRemapper remapper = new SimpleRemapper(mappingManager.getMappings());
-        classes.forEach((className, memoryClass) -> {
-            ClassNode mappedNode = new ClassNode();
-            ClassRemapper adapter = new ClassRemapper(mappedNode, remapper);
-
-            memoryClass.classNode.accept(adapter);
-            memoryClass.classNode = mappedNode;
-        });
+        classes.forEach((className, memoryClass) -> memoryClass.map(remapper));
     }
 
     /**

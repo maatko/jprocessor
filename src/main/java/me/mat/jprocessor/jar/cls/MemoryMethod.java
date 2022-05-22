@@ -3,7 +3,10 @@ package me.mat.jprocessor.jar.cls;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import me.mat.jprocessor.util.asm.ASMUtil;
+import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.MethodNode;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 public class MemoryMethod {
@@ -12,7 +15,7 @@ public class MemoryMethod {
     public MemoryClass parent;
 
     @NonNull
-    public MethodNode methodNode;
+    private MethodNode methodNode;
 
     public MemoryClass baseClass = null;
     public MemoryMethod baseMethod = null;
@@ -60,6 +63,48 @@ public class MemoryMethod {
 
     public boolean isMainMethod() {
         return methodNode.name.equals("main") && methodNode.desc.equals("([Ljava/lang/String;)V");
+    }
+
+    /**
+     * Gets the name of the current method
+     *
+     * @return {@link String}
+     */
+
+    public String name() {
+        return methodNode.name;
+    }
+
+    /**
+     * Gets the description of the current method
+     *
+     * @return {@link String}
+     */
+
+    public String description() {
+        return methodNode.desc;
+    }
+
+    /**
+     * Gets the list of visible annotations
+     * for the current method
+     *
+     * @return {@link List}
+     */
+
+    public List<AnnotationNode> getVisibleAnnotations() {
+        return methodNode.visibleAnnotations;
+    }
+
+    /**
+     * Gets the list of invisible annotations
+     * for the current method
+     *
+     * @return {@link List}
+     */
+
+    public List<AnnotationNode> getInvisibleAnnotations() {
+        return methodNode.invisibleAnnotations;
     }
 
     /**
