@@ -17,6 +17,13 @@ public class MemoryMethod {
     public MemoryClass baseClass = null;
     public MemoryMethod baseMethod = null;
 
+    /**
+     * Checks if this method overrides the provided method
+     *
+     * @param baseClass  class the that method is from
+     * @param baseMethod method that you want to check against
+     */
+
     protected void checkForOverride(MemoryClass baseClass, MemoryMethod baseMethod) {
         if (equals(baseMethod)) {
             this.baseClass = baseClass;
