@@ -48,7 +48,7 @@ Library that makes working with ASM and classes easier
         memoryJar.save(JAR_OUT_FILE);
 ```
 
-# adding the library to your project
+# importing
 
 **Gradle**
 
