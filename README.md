@@ -50,7 +50,7 @@ Library that makes working with ASM and classes easier
 
 **Gradle**
 
-```
+```gradle
 	allprojects {
 		repositories {
 			...
