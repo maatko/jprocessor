@@ -1,3 +1,5 @@
+[![Release](https://jitpack.io/v/Mat1337/jprocessor.svg)](https://jitpack.io/Mat1337/jprocessor)
+
 # jprocessor
 Library that makes working with ASM and classes easier
 
