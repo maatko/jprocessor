@@ -37,7 +37,7 @@ public class RandomMappingGenerator extends MappingGenerator {
 
         private static final String ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
         private static final Random RANDOM = new Random();
-        private static final int LENGTH = 5;
+        private static final int LENGTH = 10;
 
         private final List<String> generated = new ArrayList<>();
 

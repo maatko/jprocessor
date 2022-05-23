@@ -1,10 +1,6 @@
 # jprocessor
 Library that makes working with ASM and classes easier
 
-***
-
-***This library is in working progress***
-
 # mappings
 ```java
         // load the mapping file
@@ -48,4 +44,38 @@ Library that makes working with ASM and classes easier
 
         // save the jar to the output file
         memoryJar.save(JAR_OUT_FILE);
+```
+
+# adding the library to your project
+
+**Gradle**
+
+```
+	allprojects {
+		repositories {
+			...
+			maven { url 'https://jitpack.io' }
+		}
+	}
+	
+	dependencies {
+            implementation 'com.github.Mat1337:jprocessor:Tag'
+	}
+```
+
+**Maven**
+
+```xml
+	<repositories>
+		<repository>
+		    <id>jitpack.io</id>
+		    <url>https://jitpack.io</url>
+		</repository>
+	</repositories>
+
+    <dependency>
+        <groupId>com.github.Mat1337</groupId>
+        <artifactId>jprocessor</artifactId>
+        <version>Tag</version>
+    </dependency>
 ```
