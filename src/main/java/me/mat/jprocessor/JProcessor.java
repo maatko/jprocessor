@@ -150,30 +150,32 @@ public class JProcessor {
          * Loads mappings from a file
          * based on the provided mapping type
          *
+         * @param memoryJar   jar that has been loaded in memory
          * @param file        file that the mappings are contained in
          * @param mappingType type of the mappings that the file is saved in
          * @return {@link MappingManager}
          * @throws MappingLoadException
          */
 
-        public static MappingManager load(File file, MappingType mappingType) throws MappingLoadException {
-            return new MappingManager(mappingType.getProcessor(), file);
+        public static MappingManager load(MemoryJar memoryJar, File file, MappingType mappingType) throws MappingLoadException {
+            return new MappingManager(mappingType.getProcessor(), file, memoryJar);
         }
 
         /**
          * Loads mappings from a file asynchronously
          * based on the provided mapping type
          *
+         * @param memoryJar   jar that has been loaded in memory
          * @param file        file that the mappings are contained in
          * @param mappingType type of the mappings that the file is saved in
          * @return {@link MappingManager}
          * @throws MappingLoadException
          */
 
-        public static void load(File file, MappingType mappingType, MappingLoadCallback callback) {
+        public static void load(MemoryJar memoryJar, File file, MappingType mappingType, MappingLoadCallback callback) {
             EXECUTOR_SERVICE.submit(() -> {
                 try {
-                    callback.onLoad(load(file, mappingType));
+                    callback.onLoad(load(memoryJar, file, mappingType));
                 } catch (MappingLoadException e) {
                     callback.onFail(e.getMessage());
                 }

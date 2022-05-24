@@ -4,6 +4,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import me.mat.jprocessor.util.asm.ASMUtil;
 import org.objectweb.asm.tree.AnnotationNode;
+import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.util.List;
@@ -105,6 +106,16 @@ public class MemoryMethod {
 
     public List<AnnotationNode> getInvisibleAnnotations() {
         return methodNode.invisibleAnnotations;
+    }
+
+    /**
+     * Returns all the instructions in the method
+     *
+     * @return {@link InsnList}
+     */
+
+    public InsnList getInstructions() {
+        return methodNode.instructions;
     }
 
     /**

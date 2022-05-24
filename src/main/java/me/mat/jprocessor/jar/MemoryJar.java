@@ -74,8 +74,15 @@ public class MemoryJar {
      */
 
     public void remap(MappingManager mappingManager) {
-        SimpleRemapper remapper = new SimpleRemapper(mappingManager.getMappings());
-        classes.forEach((className, memoryClass) -> memoryClass.map(remapper));
+        // define a new remapper
+        SimpleRemapper simpleRemapper = new SimpleRemapper(mappingManager.getMappings());
+
+        // remap all the classes
+        classes.forEach((className, memoryClass) -> memoryClass.map(simpleRemapper));
+
+        // setup the class hierarchy
+        classes.forEach((className, memoryClass) -> memoryClass.initialize(classes));
+        classes.forEach((className, memoryClass) -> memoryClass.buildHierarchy());
     }
 
     /**
@@ -161,7 +168,7 @@ public class MemoryJar {
             JProcessor.Logging.info("Writing %d classes...", classes.size());
 
             // loop through all the class nodes and write them to the stream
-            classes.forEach((name, memoryClass) -> memoryClass.write(out));
+            classes.forEach((name, memoryClass) -> memoryClass.write(this, out));
 
             // alert the user that classes are finished writing
             JProcessor.Logging.info("Finished writing classes");

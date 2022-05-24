@@ -7,6 +7,8 @@ import com.google.gson.JsonObject;
 import lombok.Getter;
 import me.mat.jprocessor.JProcessor;
 import me.mat.jprocessor.jar.MemoryJar;
+import me.mat.jprocessor.jar.cls.MemoryClass;
+import me.mat.jprocessor.jar.cls.MemoryMethod;
 import me.mat.jprocessor.mappings.generation.MappingGenerateException;
 import me.mat.jprocessor.mappings.generation.generator.MappingGenerator;
 import me.mat.jprocessor.mappings.mapping.FieldMapping;
@@ -23,7 +25,7 @@ import java.util.Map;
 @Getter
 public class MappingManager {
 
-    private static final Gson GSON = new GsonBuilder().serializeNulls().create();
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().serializeNulls().create();
 
     private final Map<String, Mapping> classMappings = new HashMap<>();
 
@@ -37,7 +39,7 @@ public class MappingManager {
 
     private String currentClass;
 
-    public MappingManager(MappingProcessor processor, File mappings) throws MappingLoadException {
+    public MappingManager(MappingProcessor processor, File mappings, MemoryJar memoryJar) throws MappingLoadException {
         // if the mappings file does not exist alert the user
         if (!mappings.exists()) {
             throw new MappingLoadException(mappings.getAbsolutePath() + " does not exist");
@@ -66,6 +68,32 @@ public class MappingManager {
         JProcessor.Logging.info("Loaded '%d' class mappings", classMappings.size());
         JProcessor.Logging.info("Loaded '%d' field mappings", fieldMappings.size());
         JProcessor.Logging.info("Loaded '%d' method mappings", methodMappings.size());
+
+        // fix all the method overrides
+        memoryJar.getClasses().forEach((className, memoryClass) -> {
+            Mapping classMapping = reverseClassMappings.get(className);
+            if (classMapping != null) {
+                currentClass = classMapping.name;
+                memoryClass.methods.stream().filter(MemoryMethod::isOverride).forEach(mm -> {
+                    Mapping superClassMapping = reverseClassMappings.get(mm.baseClass.name());
+                    MethodMapping methodMapping = getMethodByMapping(
+                            superClassMapping.name,
+                            mm.baseMethod.name(),
+                            mm.baseMethod.description()
+                    );
+                    if (methodMapping != null) {
+                        mapMethod(
+                                methodMapping.name,
+                                methodMapping.mapping,
+                                methodMapping.returnType,
+                                methodMapping.mappedReturnType,
+                                methodMapping.description,
+                                methodMapping.mappedDescription
+                        );
+                    }
+                });
+            }
+        });
 
         // set the unMapping flag to false
         this.unMapping = true;
@@ -185,6 +213,45 @@ public class MappingManager {
     }
 
     /**
+     * Gets a field mapping by the class and return type
+     *
+     * @param className  name of the class that the method is in
+     * @param name       name of the field that you want to get the mapping for
+     * @param returnType return type of the field that you want to get the mapping for
+     * @return {@link MethodMapping}
+     */
+
+    public Mapping getField(String className, String name, String returnType) {
+        return fieldMappings.getOrDefault(className, new ArrayList<>()).stream().filter(fm -> fm.name.equals(name) && fm.returnType.equals(returnType)).findFirst().orElse(null);
+    }
+
+    /**
+     * Gets a field mapping by the class and return type
+     *
+     * @param className        name of the class that the method is in
+     * @param mapping          mapping of the field that you want to get the mapping for
+     * @param mappedReturnType mapped return type of the field that you want to get the mapping for
+     * @return {@link MethodMapping}
+     */
+
+    public FieldMapping getFieldByMapping(String className, String mapping, String mappedReturnType) {
+        return fieldMappings.getOrDefault(className, new ArrayList<>()).stream().filter(fm -> fm.mapping.equals(mapping) && fm.mappedReturnType.equals(mappedReturnType)).findFirst().orElse(null);
+    }
+
+    /**
+     * Gets a field mapping by the class and return type
+     *
+     * @param className  name of the class that the method is in
+     * @param mapping    mapping of the field that you want to get the mapping for
+     * @param returnType return type of the field that you want to get the mapping for
+     * @return {@link MethodMapping}
+     */
+
+    public FieldMapping getFieldCustom(String className, String mapping, String returnType) {
+        return fieldMappings.getOrDefault(className, new ArrayList<>()).stream().filter(fm -> fm.mapping.equals(mapping) && fm.returnType.equals(returnType)).findFirst().orElse(null);
+    }
+
+    /**
      * Gets a method mapping by the class, name and description
      *
      * @param className   name of the class that the method is in
@@ -196,6 +263,20 @@ public class MappingManager {
     public MethodMapping getMethod(String className, String name, String description) {
         return methodMappings.getOrDefault(className, new ArrayList<>()).stream().filter(mm -> mm.name.equals(name) && mm.description.equals(description)).findFirst().orElse(null);
     }
+
+    /**
+     * Gets a field mapping by the class and return type
+     *
+     * @param className         name of the class that the method is in
+     * @param mapping           mapping of the method that you want to get the mapping for
+     * @param mappedDescription mapped description  of the method that you want to get the mapping for
+     * @return {@link MethodMapping}
+     */
+
+    public MethodMapping getMethodByMapping(String className, String mapping, String mappedDescription) {
+        return methodMappings.getOrDefault(className, new ArrayList<>()).stream().filter(mm -> mm.mapping.equals(mapping) && mm.mappedDescription.equals(mappedDescription)).findFirst().orElse(null);
+    }
+
 
     /**
      * Saves all the mappings into a json file
@@ -246,6 +327,7 @@ public class MappingManager {
                 unMapping ? mapping.mapping : mapping.name,
                 unMapping ? mapping.name : mapping.mapping
         ));
+
         fieldMappings.forEach((className, fieldMappings) -> fieldMappings.forEach(mapping -> {
             Mapping classMapping = getClass(className);
             if (classMapping != null) {
@@ -258,12 +340,17 @@ public class MappingManager {
         methodMappings.forEach((className, methodMappings) -> {
             Mapping classMapping = getClass(className);
             if (classMapping != null) {
-                methodMappings.forEach(mapping -> {
-                    mappings.put(
-                            (unMapping ? classMapping.mapping : classMapping.name) + "." + (unMapping ? mapping.mapping + mapping.mappedDescription : mapping.name + mapping.description),
-                            unMapping ? mapping.name : mapping.mapping
-                    );
-                });
+                if (unMapping) {
+                    methodMappings.forEach(mapping -> mappings.put(
+                            classMapping.mapping + "." + mapping.mapping + mapping.mappedDescription,
+                            mapping.name
+                    ));
+                } else {
+                    methodMappings.forEach(mapping -> mappings.put(
+                            classMapping.name + "." + mapping.name + mapping.description,
+                            mapping.mapping
+                    ));
+                }
             }
         });
         return mappings;

@@ -68,10 +68,10 @@ public class ProGuardProcessor implements MappingProcessor {
         // build all the descriptions
         methodMappings.forEach((className, mappings) -> mappings.forEach(methodMapping -> {
             // build the unmapped version of the description
-            methodMapping.description = buildDescription(methodMapping.description, methodMapping.returnType);
+            methodMapping.description = buildDescription(methodMapping.description, methodMapping.returnType, false);
 
             // build the mapped version of the description
-            methodMapping.mappedDescription = buildDescription(methodMapping.mappedDescription, methodMapping.mappedReturnType);
+            methodMapping.mappedDescription = buildDescription(methodMapping.mappedDescription, methodMapping.mappedReturnType, true);
         }));
     }
 
@@ -86,14 +86,12 @@ public class ProGuardProcessor implements MappingProcessor {
 
     void mapReturnTypes() {
         fieldMappings.forEach((className, mappings) -> mappings.forEach(fieldMapping -> {
-            String returnType = fieldMapping.returnType;
-            fieldMapping.returnType = ASMUtil.toByteCodeFromJava(returnType);
-            fieldMapping.mappedReturnType = ASMUtil.toByteCodeFromJava(getMappedType(returnType));
+            fieldMapping.returnType = ASMUtil.toByteCodeFromJava(fieldMapping.returnType);
+            fieldMapping.mappedReturnType = getMappedType(fieldMapping.returnType);
         }));
         methodMappings.forEach((className, mappings) -> mappings.forEach(methodMapping -> {
-            String returnType = methodMapping.returnType;
-            methodMapping.returnType = ASMUtil.toByteCodeFromJava(returnType);
-            methodMapping.mappedReturnType = ASMUtil.toByteCodeFromJava(getMappedType(returnType));
+            methodMapping.returnType = ASMUtil.toByteCodeFromJava(methodMapping.returnType);
+            methodMapping.mappedReturnType = getMappedType(methodMapping.returnType);
         }));
     }
 
@@ -106,7 +104,7 @@ public class ProGuardProcessor implements MappingProcessor {
             if (!methodMapping.description.isEmpty()) {
                 StringBuilder builder = new StringBuilder();
                 for (String type : methodMapping.description.split(",")) {
-                    builder.append(getMappedType(type));
+                    builder.append(getMappedType(ASMUtil.toByteCodeFromJava(type)));
                     builder.append(",");
                 }
                 String description = builder.toString();
@@ -127,13 +125,14 @@ public class ProGuardProcessor implements MappingProcessor {
      *
      * @param description unmapped version of the description
      * @param returnType  return type of the method
+     * @param mapped      flag containing if it's a name or mapping
      * @return {@link String}
      */
 
-    String buildDescription(String description, String returnType) {
+    String buildDescription(String description, String returnType, boolean mapped) {
         StringBuilder builder = new StringBuilder("(");
         for (String type : description.split(",")) {
-            builder.append(ASMUtil.toByteCodeFromJava(type));
+            builder.append(mapped ? type : ASMUtil.toByteCodeFromJava(type));
         }
         builder.append(")");
         builder.append(returnType);
@@ -143,15 +142,45 @@ public class ProGuardProcessor implements MappingProcessor {
     /**
      * Gets a mapped type from a type
      *
-     * @param type type that you want to get the mapping for
+     * @param name type that you want to get the mapping for
      * @return {@link String}
      */
 
-    String getMappedType(String type) {
-        if (classMappings.containsKey(type)) {
-            return classMappings.get(type).mapping;
+    String getMappedType(String name) {
+        StringBuilder builder = new StringBuilder();
+        boolean complex = false;
+        String type = name;
+        if (type.startsWith("[")) {
+            int offset = type.lastIndexOf("[") + 1;
+            type = type.substring(offset);
+            for (int i = 0; i < offset; i++) {
+                builder.append("[");
+            }
+            if (type.startsWith("L")) {
+                type = type.substring(1, type.length() - 1);
+                builder.append("L");
+                complex = true;
+            }
+        } else if (type.startsWith("L")) {
+            type = type.substring(1, type.length() - 1);
+            builder.append("L");
+            complex = true;
         }
-        return type;
+
+        String mapping;
+        if (classMappings.containsKey(type)) {
+            mapping = classMappings.get(type).mapping;
+        } else if (reverseClassMappings.containsKey(type)) {
+            mapping = reverseClassMappings.get(type).mapping;
+        } else {
+            mapping = type;
+        }
+
+        builder.append(mapping);
+        if (complex) {
+            builder.append(";");
+        }
+        return builder.toString();
     }
 
 }

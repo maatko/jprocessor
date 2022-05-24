@@ -55,11 +55,11 @@ public class JProcessTest {
             download(manifest.downloads.client.url, CLIENT_JAR_FILE);
         }
 
-        // load the mapping file
-        MappingManager mappingManager = JProcessor.Mapping.load(MAPPINGS_FILE, MappingType.PROGUARD);
-
         // load the jar into memory
         MemoryJar memoryJar = JProcessor.Jar.load(CLIENT_JAR_FILE);
+
+        // load the mapping file
+        MappingManager mappingManager = JProcessor.Mapping.load(memoryJar, MAPPINGS_FILE, MappingType.PROGUARD);
 
         // remap the jar
         memoryJar.remap(mappingManager);

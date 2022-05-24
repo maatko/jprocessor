@@ -2,6 +2,8 @@ package me.mat.jprocessor.jar.cls;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import me.mat.jprocessor.jar.MemoryJar;
+import me.mat.jprocessor.util.asm.CustomClassWriter;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.ClassRemapper;
@@ -21,6 +23,10 @@ import java.util.jar.JarOutputStream;
 public class MemoryClass {
 
     public final Map<String, MemoryInnerClass> innerClasses = new HashMap<>();
+
+    public final Map<MemoryClass, List<MemoryField>> superFields = new HashMap<>();
+
+    public final Map<MemoryClass, List<MemoryMethod>> superMethods = new HashMap<>();
 
     public final Map<String, MemoryClass> interfaces = new HashMap<>();
 
@@ -48,6 +54,10 @@ public class MemoryClass {
         // clear all the fields and methods
         fields.clear();
         methods.clear();
+        interfaces.clear();
+        innerClasses.clear();
+        superFields.clear();
+        superMethods.clear();
 
         // get the outer class
         outerClass = classes.get(classNode.outerClass);
@@ -207,19 +217,19 @@ public class MemoryClass {
      * Maps the current class based on the
      * mappings from the provided remapper
      *
-     * @param remapper remapper that you want to use to remap this class
+     * @param simpleRemapper remapper that you want to use to remap this class
      */
 
-    public void map(SimpleRemapper remapper) {
+    public void map(SimpleRemapper simpleRemapper) {
         ClassNode mappedNode = new ClassNode();
-        ClassRemapper adapter = new ClassRemapper(mappedNode, remapper);
+        ClassRemapper adapter = new ClassRemapper(mappedNode, simpleRemapper);
 
         classNode.accept(adapter);
-        String mapping = remapper.map(classNode.name);
+        String mapping = simpleRemapper.map(classNode.name);
 
         classNode = mappedNode;
-        classNode.sourceFile = remapper.map(mapping);
-        classNode.sourceDebug = null;
+        classNode.sourceFile = simpleRemapper.map(mapping);
+        classNode.sourceDebug = simpleRemapper.map(mapping);
     }
 
     /**
@@ -228,10 +238,10 @@ public class MemoryClass {
      * @param outputStream stream that you want to write the class to
      */
 
-    public void write(JarOutputStream outputStream) {
+    public void write(MemoryJar memoryJar, JarOutputStream outputStream) {
         try {
             // create the class writer
-            ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+            CustomClassWriter classWriter = new CustomClassWriter(memoryJar, ClassWriter.COMPUTE_FRAMES);
 
             // load the class bytes into the class writer
             classNode.accept(classWriter);
@@ -366,6 +376,18 @@ public class MemoryClass {
         if (memoryClass == null) {
             return;
         }
+
+        // load all the super fields
+        List<MemoryField> fields = superFields.getOrDefault(memoryClass, new ArrayList<>());
+        fields.addAll(memoryClass.fields);
+        superFields.put(memoryClass, fields);
+
+        // load all the super methods
+        List<MemoryMethod> methods = superMethods.getOrDefault(memoryClass, new ArrayList<>());
+        methods.addAll(memoryClass.methods);
+        superMethods.put(memoryClass, methods);
+
+        // continue searching for other super classes
         superClasses.add(memoryClass);
         findSuperClasses(memoryClass.superClass, superClasses);
     }

@@ -3,6 +3,7 @@ package me.mat.jprocessor.jar.cls;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import me.mat.jprocessor.util.asm.ASMUtil;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.FieldNode;
 
