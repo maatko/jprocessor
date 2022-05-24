@@ -392,6 +392,8 @@ public class MemoryClass {
 
         // continue searching for other super classes
         superClasses.add(memoryClass);
+
+        memoryClass.interfaces.forEach((className, interfaceClass) -> findSuperClasses(interfaceClass, superClasses));
         findSuperClasses(memoryClass.superClass, superClasses);
     }
 

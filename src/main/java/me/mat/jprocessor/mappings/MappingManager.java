@@ -73,32 +73,6 @@ public class MappingManager extends SimpleRemapper {
         JProcessor.Logging.info("Loaded '%d' field mappings", fieldMappings.size());
         JProcessor.Logging.info("Loaded '%d' method mappings", methodMappings.size());
 
-        // fix all the method overrides
-        memoryJar.getClasses().forEach((className, memoryClass) -> {
-            Mapping classMapping = reverseClassMappings.get(className);
-            if (classMapping != null) {
-                currentClass = classMapping.name;
-                memoryClass.methods.stream().filter(MemoryMethod::isOverride).forEach(mm -> {
-                    Mapping superClassMapping = reverseClassMappings.get(mm.baseClass.name());
-                    MethodMapping methodMapping = getMethodByMapping(
-                            superClassMapping.name,
-                            mm.baseMethod.name(),
-                            mm.baseMethod.description()
-                    );
-                    if (methodMapping != null) {
-                        mapMethod(
-                                methodMapping.name,
-                                methodMapping.mapping,
-                                methodMapping.returnType,
-                                methodMapping.mappedReturnType,
-                                methodMapping.description,
-                                methodMapping.mappedDescription
-                        );
-                    }
-                });
-            }
-        });
-
         // set the unMapping flag to false
         this.unMapping = true;
 
@@ -349,7 +323,7 @@ public class MappingManager extends SimpleRemapper {
                 );
             }
         }));
-        /*
+
         methodMappings.forEach((className, methodMappings) -> {
             Mapping classMapping = getClass(className);
             if (classMapping != null) {
@@ -365,7 +339,7 @@ public class MappingManager extends SimpleRemapper {
                     ));
                 }
             }
-        });*/
+        });
         return mappings;
     }
 
