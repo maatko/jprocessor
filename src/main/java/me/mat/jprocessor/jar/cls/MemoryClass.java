@@ -3,11 +3,11 @@ package me.mat.jprocessor.jar.cls;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import me.mat.jprocessor.jar.MemoryJar;
+import me.mat.jprocessor.mappings.MappingManager;
+import me.mat.jprocessor.util.asm.CustomClassRemapper;
 import me.mat.jprocessor.util.asm.CustomClassWriter;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.commons.ClassRemapper;
-import org.objectweb.asm.commons.SimpleRemapper;
 import org.objectweb.asm.tree.*;
 
 import java.io.IOException;
@@ -63,20 +63,16 @@ public class MemoryClass {
         outerClass = classes.get(classNode.outerClass);
 
         // load all the fields into the memory
-        classNode.fields.forEach(fieldNode -> fields.add(new MemoryField(fieldNode)));
+        classNode.fields.forEach(fieldNode -> {
+            if (Modifier.isPrivate(fieldNode.access)) {
+                fieldNode.access -= Opcodes.ACC_PRIVATE;
+                fieldNode.access += Opcodes.ACC_PUBLIC;
+            }
+            fields.add(new MemoryField(fieldNode));
+        });
 
         // load all the methods into the memory
         classNode.methods.forEach(methodNode -> methods.add(new MemoryMethod(this, methodNode)));
-
-        // load all the inner classes into the memory
-        classNode.innerClasses.forEach(innerClassNode -> {
-            MemoryInnerClass innerClass = new MemoryInnerClass(innerClassNode);
-            if (classes.containsKey(innerClass.classNode.name)) {
-                innerClass.outerClass = classes.get(innerClass.classNode.name);
-                innerClass.outerClass.isInnerClass = true;
-            }
-            innerClasses.put(innerClassNode.name, innerClass);
-        });
 
         // find all the extended interfaces
         List<String> interfaces = classNode.interfaces;
@@ -87,6 +83,16 @@ public class MemoryClass {
                 }
             });
         }
+
+        // load all the inner classes into the memory
+        classNode.innerClasses.forEach(innerClassNode -> {
+            MemoryInnerClass innerClass = new MemoryInnerClass(innerClassNode);
+            if (classes.containsKey(innerClass.classNode.name)) {
+                innerClass.outerClass = classes.get(innerClass.classNode.name);
+                innerClass.outerClass.isInnerClass = true;
+            }
+            innerClasses.put(innerClassNode.name, innerClass);
+        });
 
         // find the super class
         this.findSuperClass(classes);
@@ -99,8 +105,9 @@ public class MemoryClass {
 
     public void buildHierarchy() {
         // collect all the super classes that might have overrides
-        List<MemoryClass> superClasses = new ArrayList<>(interfaces.values());
+        List<MemoryClass> superClasses = new ArrayList<>();
         findSuperClasses(superClass, superClasses);
+        interfaces.values().forEach(memoryClass -> findSuperClasses(memoryClass, superClasses));
 
         // loop through all the super classes and check for current class method overrides
         superClasses.forEach(memoryClass
@@ -217,19 +224,15 @@ public class MemoryClass {
      * Maps the current class based on the
      * mappings from the provided remapper
      *
-     * @param simpleRemapper remapper that you want to use to remap this class
+     * @param mappingManager mappings that you want to use to map the class
      */
 
-    public void map(SimpleRemapper simpleRemapper) {
+    public void map(MemoryJar memoryJar, MappingManager mappingManager) {
         ClassNode mappedNode = new ClassNode();
-        ClassRemapper adapter = new ClassRemapper(mappedNode, simpleRemapper);
+        CustomClassRemapper adapter = new CustomClassRemapper(mappedNode, memoryJar, mappingManager);
 
         classNode.accept(adapter);
-        String mapping = simpleRemapper.map(classNode.name);
-
         classNode = mappedNode;
-        classNode.sourceFile = simpleRemapper.map(mapping);
-        classNode.sourceDebug = simpleRemapper.map(mapping);
     }
 
     /**
@@ -241,7 +244,7 @@ public class MemoryClass {
     public void write(MemoryJar memoryJar, JarOutputStream outputStream) {
         try {
             // create the class writer
-            CustomClassWriter classWriter = new CustomClassWriter(memoryJar, ClassWriter.COMPUTE_FRAMES);
+            CustomClassWriter classWriter = new CustomClassWriter(memoryJar, ClassWriter.COMPUTE_MAXS);
 
             // load the class bytes into the class writer
             classNode.accept(classWriter);

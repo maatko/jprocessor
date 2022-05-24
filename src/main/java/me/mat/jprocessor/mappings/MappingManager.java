@@ -7,7 +7,6 @@ import com.google.gson.JsonObject;
 import lombok.Getter;
 import me.mat.jprocessor.JProcessor;
 import me.mat.jprocessor.jar.MemoryJar;
-import me.mat.jprocessor.jar.cls.MemoryClass;
 import me.mat.jprocessor.jar.cls.MemoryMethod;
 import me.mat.jprocessor.mappings.generation.MappingGenerateException;
 import me.mat.jprocessor.mappings.generation.generator.MappingGenerator;
@@ -15,6 +14,7 @@ import me.mat.jprocessor.mappings.mapping.FieldMapping;
 import me.mat.jprocessor.mappings.mapping.Mapping;
 import me.mat.jprocessor.mappings.mapping.MethodMapping;
 import me.mat.jprocessor.mappings.mapping.processor.MappingProcessor;
+import org.objectweb.asm.commons.SimpleRemapper;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 @Getter
-public class MappingManager {
+public class MappingManager extends SimpleRemapper {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().serializeNulls().create();
 
@@ -35,11 +35,15 @@ public class MappingManager {
 
     private final Map<String, List<MethodMapping>> methodMappings = new HashMap<>();
 
+    private final Map<String, String> mappings;
+
     private final boolean unMapping;
 
     private String currentClass;
 
     public MappingManager(MappingProcessor processor, File mappings, MemoryJar memoryJar) throws MappingLoadException {
+        super(new HashMap<>());
+
         // if the mappings file does not exist alert the user
         if (!mappings.exists()) {
             throw new MappingLoadException(mappings.getAbsolutePath() + " does not exist");
@@ -97,9 +101,14 @@ public class MappingManager {
 
         // set the unMapping flag to false
         this.unMapping = true;
+
+        // get the mappings
+        this.mappings = getMappings();
     }
 
     public MappingManager(MappingGenerator mappingGenerator, MemoryJar memoryJar) throws MappingGenerateException {
+        super(new HashMap<>());
+
         // log to console that mappings are being loaded
         JProcessor.Logging.info("Generating mappings");
 
@@ -116,6 +125,9 @@ public class MappingManager {
 
         // set the unMapping flag to false
         this.unMapping = false;
+
+        // get the mappings
+        this.mappings = getMappings();
     }
 
     /**
@@ -221,7 +233,7 @@ public class MappingManager {
      * @return {@link MethodMapping}
      */
 
-    public Mapping getField(String className, String name, String returnType) {
+    public FieldMapping getField(String className, String name, String returnType) {
         return fieldMappings.getOrDefault(className, new ArrayList<>()).stream().filter(fm -> fm.name.equals(name) && fm.returnType.equals(returnType)).findFirst().orElse(null);
     }
 
@@ -337,6 +349,7 @@ public class MappingManager {
                 );
             }
         }));
+        /*
         methodMappings.forEach((className, methodMappings) -> {
             Mapping classMapping = getClass(className);
             if (classMapping != null) {
@@ -352,8 +365,41 @@ public class MappingManager {
                     ));
                 }
             }
-        });
+        });*/
         return mappings;
+    }
+
+    @Override
+    public String mapMethodName(String owner, String name, String desc) {
+        if (!desc.startsWith("(")) {
+            return mapFieldName(owner, name, desc);
+        }
+        return super.mapMethodName(owner, name, desc);
+    }
+
+    @Override
+    public String mapFieldName(String owner, String name, String desc) {
+        return super.mapFieldName(owner, name, desc);
+    }
+
+    @Override
+    public String mapRecordComponentName(String owner, String name, String descriptor) {
+        return mapFieldName(owner, name, descriptor);
+    }
+
+    @Override
+    public String mapMethodDesc(String methodDescriptor) {
+        return super.mapMethodDesc(methodDescriptor);
+    }
+
+    @Override
+    public Object mapValue(Object value) {
+        return super.mapValue(value);
+    }
+
+    @Override
+    public String map(String key) {
+        return this.mappings.get(key);
     }
 
 }

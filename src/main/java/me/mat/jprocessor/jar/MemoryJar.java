@@ -7,7 +7,6 @@ import me.mat.jprocessor.jar.cls.MemoryManifest;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.util.JarUtil;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.commons.SimpleRemapper;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.io.File;
@@ -74,11 +73,8 @@ public class MemoryJar {
      */
 
     public void remap(MappingManager mappingManager) {
-        // define a new remapper
-        SimpleRemapper simpleRemapper = new SimpleRemapper(mappingManager.getMappings());
-
         // remap all the classes
-        classes.forEach((className, memoryClass) -> memoryClass.map(simpleRemapper));
+        classes.forEach((className, memoryClass) -> memoryClass.map(this, mappingManager));
 
         // setup the class hierarchy
         classes.forEach((className, memoryClass) -> memoryClass.initialize(classes));

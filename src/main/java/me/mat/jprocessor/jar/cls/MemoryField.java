@@ -7,6 +7,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.FieldNode;
 
+import java.lang.reflect.Modifier;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -53,6 +54,26 @@ public class MemoryField {
 
     public List<AnnotationNode> getInvisibleAnnotations() {
         return fieldNode.invisibleAnnotations;
+    }
+
+    /**
+     * Checks if the field has final modifier
+     *
+     * @return {@link Boolean}
+     */
+
+    public boolean isFinal() {
+        return Modifier.isFinal(fieldNode.access);
+    }
+
+    /**
+     * Checks if the field has static modifier
+     *
+     * @return {@link Boolean}
+     */
+
+    public boolean iStatic() {
+        return Modifier.isStatic(fieldNode.access);
     }
 
     /**
