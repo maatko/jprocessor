@@ -77,6 +77,24 @@ public class MemoryField {
     }
 
     /**
+     * Checks if the instruction matches
+     * the current field
+     *
+     * @param instruction instruction that you want to check aginst
+     * @return {@link Boolean}
+     */
+
+    public boolean isCorrectInstruction(int instruction) {
+        if (instruction == Opcodes.GETSTATIC && !iStatic()) {
+            return false;
+        } else if (instruction == Opcodes.PUTSTATIC && (!iStatic() || isFinal())) {
+            return false;
+        } else if (instruction == Opcodes.GETFIELD && iStatic()) {
+            return false;
+        } else return instruction != Opcodes.PUTFIELD || (!iStatic() && !isFinal());
+    }
+
+    /**
      * Checks if the provided object is equal to this object
      *
      * @param obj object that you are trying to check

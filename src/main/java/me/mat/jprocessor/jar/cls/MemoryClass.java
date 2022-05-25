@@ -185,6 +185,72 @@ public class MemoryClass {
     }
 
     /**
+     * Attempts to find a field in one of the super classes
+     * starting from the this class
+     *
+     * @param name           name of the field
+     * @param descriptor     descriptor of the field
+     * @param instruction    instruction of the node to match with
+     * @param classReference reference that the class will be stored in
+     * @param fieldReference reference that the field will be stored in
+     */
+
+    public void findField(int instruction, String name, String descriptor, AtomicReference<MemoryClass> classReference, AtomicReference<MemoryField> fieldReference) {
+        findField(this, name, descriptor, instruction, classReference, fieldReference);
+    }
+
+    /**
+     * Attempts to find a field in one of the super classes
+     * starting from the provided super class
+     *
+     * @param superClass     super class that you want to start the search with
+     * @param name           name of the field
+     * @param descriptor     descriptor of the field
+     * @param instruction    instruction of the node to match with
+     * @param classReference reference that the class will be stored in
+     * @param fieldReference reference that the field will be stored in
+     */
+
+    void findField(MemoryClass superClass, String name,
+                   String descriptor, int instruction,
+                   AtomicReference<MemoryClass> classReference, AtomicReference<MemoryField> fieldReference) {
+        // if the current super class is invalid
+        if (superClass == null) {
+            // return out of the method
+            return;
+        }
+
+        // loop through all the fields
+        for (MemoryField field : superClass.fields) {
+
+            // if the instruction does not match the field
+            if (!field.isCorrectInstruction(instruction)) {
+
+                // continue in the loop
+                continue;
+            }
+
+            // if the name and the descriptor match the field
+            if (field.name().equals(name) && field.description().equals(descriptor)) {
+
+                // update the references
+                fieldReference.set(field);
+                classReference.set(superClass);
+
+                // return out of the method
+                return;
+            }
+        }
+
+        // search for the field in all the interfaces
+        superClass.interfaces.forEach((className, interfaceClass)
+                -> findField(interfaceClass, name, descriptor, instruction, classReference, fieldReference));
+
+        // continue the search in the next super class
+        findField(superClass.superClass, name, descriptor, instruction, classReference, fieldReference);
+    }
+
+    /**
      * Adds a method to the current class in memory
      *
      * @param access     access of the method

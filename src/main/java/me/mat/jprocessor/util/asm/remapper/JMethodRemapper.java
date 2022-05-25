@@ -8,13 +8,9 @@ import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.mappings.mapping.FieldMapping;
 import me.mat.jprocessor.mappings.mapping.MethodMapping;
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.MethodRemapper;
 import org.objectweb.asm.commons.Remapper;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class JMethodRemapper extends MethodRemapper {
@@ -97,33 +93,10 @@ public class JMethodRemapper extends MethodRemapper {
             // make sure that its valid
             if (memoryClass != null) {
 
-                // define the references to the super class and the field
+                // find the field from one of the super classes
                 AtomicReference<MemoryClass> classReference = new AtomicReference<>(null);
                 AtomicReference<MemoryField> fieldReference = new AtomicReference<>(null);
-
-                // load all the super fields
-                Map<MemoryClass, List<MemoryField>> fieldMap = new HashMap<>();
-                fieldMap.put(memoryClass, memoryClass.fields);
-                fieldMap.putAll(memoryClass.superFields);
-
-                // find the super class and the field
-                fieldMap.forEach((superClass, fields) -> {
-                    for (MemoryField field : fields) {
-                        if (opcode == Opcodes.GETSTATIC && !field.iStatic()) {
-                            continue;
-                        } else if (opcode == Opcodes.PUTSTATIC && (!field.iStatic() || field.isFinal())) {
-                            continue;
-                        } else if (opcode == Opcodes.GETFIELD && field.iStatic()) {
-                            continue;
-                        } else if (opcode == Opcodes.PUTFIELD && (field.iStatic() || field.isFinal())) {
-                            continue;
-                        }
-                        if (field.name().equals(name) && field.description().equals(descriptor)) {
-                            classReference.set(superClass);
-                            fieldReference.set(field);
-                        }
-                    }
-                });
+                memoryClass.findField(opcode, name, descriptor, classReference, fieldReference);
 
                 // get the field and the super class
                 MemoryField field = fieldReference.get();
