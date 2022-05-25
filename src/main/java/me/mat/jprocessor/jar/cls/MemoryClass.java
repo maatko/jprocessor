@@ -4,8 +4,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import me.mat.jprocessor.jar.MemoryJar;
 import me.mat.jprocessor.mappings.MappingManager;
-import me.mat.jprocessor.util.asm.CustomClassRemapper;
 import me.mat.jprocessor.util.asm.CustomClassWriter;
+import me.mat.jprocessor.util.asm.remapper.JClassRemapper;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
@@ -219,6 +220,28 @@ public class MemoryClass {
         return memoryMethod;
     }
 
+    /**
+     * Attempts to find a method in the super classes
+     *
+     * @param name            name of the method
+     * @param descriptor      descriptor of the method
+     * @param classReference  reference that the super class will be stored into
+     * @param methodReference reference that the method will be stored into
+     */
+
+    public void getMethod(String name, String descriptor, AtomicReference<MemoryClass> classReference, AtomicReference<MemoryMethod> methodReference) {
+        Map<MemoryClass, List<MemoryMethod>> methodMap = new HashMap<>();
+        methodMap.put(this, methods);
+        methodMap.putAll(superMethods);
+
+        methodMap.forEach((superClass, methods)
+                -> methods.stream().filter(memoryMethod
+                -> memoryMethod.name().equals(name)
+                && memoryMethod.description().equals(descriptor)).forEach(memoryMethod -> {
+            classReference.set(superClass);
+            methodReference.set(memoryMethod);
+        }));
+    }
 
     /**
      * Maps the current class based on the
@@ -229,7 +252,7 @@ public class MemoryClass {
 
     public void map(MemoryJar memoryJar, MappingManager mappingManager) {
         ClassNode mappedNode = new ClassNode();
-        CustomClassRemapper adapter = new CustomClassRemapper(mappedNode, memoryJar, mappingManager);
+        JClassRemapper adapter = new JClassRemapper(mappedNode, memoryJar, mappingManager);
 
         classNode.accept(adapter);
         classNode = mappedNode;

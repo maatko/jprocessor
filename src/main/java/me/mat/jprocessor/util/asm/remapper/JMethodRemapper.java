@@ -1,4 +1,4 @@
-package me.mat.jprocessor.util.asm;
+package me.mat.jprocessor.util.asm.remapper;
 
 import me.mat.jprocessor.jar.MemoryJar;
 import me.mat.jprocessor.jar.cls.MemoryClass;
@@ -7,7 +7,6 @@ import me.mat.jprocessor.jar.cls.MemoryMethod;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.mappings.mapping.FieldMapping;
 import me.mat.jprocessor.mappings.mapping.MethodMapping;
-import org.objectweb.asm.Handle;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.MethodRemapper;
@@ -18,11 +17,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class CustomMethodRemapper extends MethodRemapper {
+public class JMethodRemapper extends MethodRemapper {
 
     private final MemoryJar memoryJar;
 
-    protected CustomMethodRemapper(int api, MethodVisitor methodVisitor, MemoryJar memoryJar, Remapper remapper) {
+    protected JMethodRemapper(int api, MethodVisitor methodVisitor, MemoryJar memoryJar, Remapper remapper) {
         super(api, methodVisitor, remapper);
         this.memoryJar = memoryJar;
     }
@@ -32,39 +31,48 @@ public class CustomMethodRemapper extends MethodRemapper {
         if (this.api < 327680 && (opcodeAndSource & 256) == 0) {
             super.visitMethodInsn(opcodeAndSource, owner, name, descriptor, isInterface);
         } else {
+            // get the method mapping
             String methodMapping = this.remapper.mapMethodName(owner, name, descriptor);
+
+            // if the mapping is the same as name that means it needs to be searched for in super methods
             if (methodMapping.equals(name)) {
+
+                // get the MemoryClass of the owner
                 MemoryClass memoryClass = memoryJar.getClass(owner);
+
+                // make sure that its valid
                 if (memoryClass != null) {
+
+                    // find the method in the super methods
                     AtomicReference<MemoryClass> classReference = new AtomicReference<>(null);
                     AtomicReference<MemoryMethod> methodReference = new AtomicReference<>(null);
-                    Map<MemoryClass, List<MemoryMethod>> methodMap = new HashMap<>();
-                    methodMap.put(memoryClass, memoryClass.methods);
-                    methodMap.putAll(memoryClass.superMethods);
-                    methodMap.forEach((superClass, methods) -> {
-                        methods.stream().filter(memoryMethod -> memoryMethod.name().equals(name) && memoryMethod.description().equals(descriptor)).forEach(memoryMethod -> {
-                            classReference.set(superClass);
-                            methodReference.set(memoryMethod);
-                        });
-                    });
-                    String classMapping = this.remapper.mapType(owner);
-                    if (classMapping != null) {
-                        MemoryMethod method = methodReference.get();
-                        if (method != null) {
-                            MemoryClass superClass = classReference.get();
-                            MappingManager mappingManager = (MappingManager) remapper;
-                            MethodMapping mapping = mappingManager.getMethodByMapping(
-                                    this.remapper.mapType(superClass.name()),
-                                    method.name(),
-                                    method.description()
-                            );
-                            if (mapping != null) {
-                                methodMapping = mapping.name;
-                            }
+                    memoryClass.getMethod(name, descriptor, classReference, methodReference);
+
+                    // get the method and the super class
+                    MemoryMethod method = methodReference.get();
+                    MemoryClass superClass = classReference.get();
+
+                    // make sure that the super class and method are valid
+                    if (method != null && superClass != null) {
+
+                        // get the mapping
+                        MethodMapping mapping = ((MappingManager) remapper).getMethodByMapping(
+                                this.remapper.mapType(superClass.name()),
+                                method.name(),
+                                method.description()
+                        );
+
+                        // make sure that the mapping is valid
+                        if (mapping != null) {
+
+                            // update the method mapping
+                            methodMapping = mapping.name;
                         }
                     }
                 }
             }
+
+            // pass the visit call and remap the method call
             super.visitMethodInsn(
                     opcodeAndSource,
                     this.remapper.mapType(owner),
@@ -77,15 +85,28 @@ public class CustomMethodRemapper extends MethodRemapper {
 
     @Override
     public void visitFieldInsn(int opcode, String owner, String name, String descriptor) {
+        // get the field mapping
         String fieldMapping = this.remapper.mapFieldName(owner, name, descriptor);
+
+        // if the mapping is the same as name that means it needs to be searched for in super fields
         if (name.equals(fieldMapping)) {
+
+            // get the MemoryClass of the owner
             MemoryClass memoryClass = memoryJar.getClass(owner);
+
+            // make sure that its valid
             if (memoryClass != null) {
+
+                // define the references to the super class and the field
                 AtomicReference<MemoryClass> classReference = new AtomicReference<>(null);
                 AtomicReference<MemoryField> fieldReference = new AtomicReference<>(null);
+
+                // load all the super fields
                 Map<MemoryClass, List<MemoryField>> fieldMap = new HashMap<>();
                 fieldMap.put(memoryClass, memoryClass.fields);
                 fieldMap.putAll(memoryClass.superFields);
+
+                // find the super class and the field
                 fieldMap.forEach((superClass, fields) -> {
                     for (MemoryField field : fields) {
                         if (opcode == Opcodes.GETSTATIC && !field.iStatic()) {
@@ -104,24 +125,31 @@ public class CustomMethodRemapper extends MethodRemapper {
                     }
                 });
 
-                String classMapping = this.remapper.mapType(owner);
-                if (classMapping != null) {
-                    MemoryField field = fieldReference.get();
-                    if (field != null) {
-                        MemoryClass superClass = classReference.get();
-                        MappingManager mappingManager = (MappingManager) remapper;
-                        FieldMapping mapping = mappingManager.getFieldByMapping(
-                                this.remapper.mapType(superClass.name()),
-                                field.name(),
-                                field.description()
-                        );
-                        if (mapping != null) {
-                            fieldMapping = mapping.name;
-                        }
+                // get the field and the super class
+                MemoryField field = fieldReference.get();
+                MemoryClass superClass = classReference.get();
+
+                // make sure that the super class and the field are valid
+                if (field != null && superClass != null) {
+
+                    // get the mapping
+                    FieldMapping mapping = ((MappingManager) remapper).getFieldByMapping(
+                            this.remapper.mapType(superClass.name()),
+                            field.name(),
+                            field.description()
+                    );
+
+                    // make sure that the mapping is valid
+                    if (mapping != null) {
+
+                        // update the field mapping
+                        fieldMapping = mapping.name;
                     }
                 }
             }
         }
+
+        // pass the visit call and map the field
         super.visitFieldInsn(
                 opcode,
                 this.remapper.mapType(owner),

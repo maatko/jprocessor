@@ -352,23 +352,8 @@ public class MappingManager extends SimpleRemapper {
     }
 
     @Override
-    public String mapFieldName(String owner, String name, String desc) {
-        return super.mapFieldName(owner, name, desc);
-    }
-
-    @Override
     public String mapRecordComponentName(String owner, String name, String descriptor) {
         return mapFieldName(owner, name, descriptor);
-    }
-
-    @Override
-    public String mapMethodDesc(String methodDescriptor) {
-        return super.mapMethodDesc(methodDescriptor);
-    }
-
-    @Override
-    public Object mapValue(Object value) {
-        return super.mapValue(value);
     }
 
     @Override
