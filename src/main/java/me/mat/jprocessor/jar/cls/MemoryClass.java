@@ -5,6 +5,9 @@ import lombok.RequiredArgsConstructor;
 import me.mat.jprocessor.jar.MemoryJar;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.mappings.remapper.JClassRemapper;
+import me.mat.jprocessor.transformer.ClassTransformer;
+import me.mat.jprocessor.transformer.FieldTransformer;
+import me.mat.jprocessor.transformer.MethodTransformer;
 import me.mat.jprocessor.util.asm.CustomClassWriter;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -115,6 +118,44 @@ public class MemoryClass {
                 -> memoryClass.methods.forEach(override
                 -> methods.forEach(method
                 -> method.checkForOverride(memoryClass, override))));
+    }
+
+    /**
+     * Transforms current class with the
+     * provided class transformer
+     *
+     * @param classTransformer class transformer that you want to use
+     */
+
+    public void transform(ClassTransformer classTransformer) {
+        // transform the class
+        classTransformer.transform(this);
+
+        // transform the fields and methods
+        transform((FieldTransformer) classTransformer);
+        transform((MethodTransformer) classTransformer);
+    }
+
+    /**
+     * Transforms all the fields in the class
+     * with the provided field transformer
+     *
+     * @param fieldTransformer field transformer that you want to use
+     */
+
+    public void transform(FieldTransformer fieldTransformer) {
+        fields.forEach(memoryField -> fieldTransformer.transform(this, memoryField));
+    }
+
+    /**
+     * Transforms all the methods in the class
+     * with the provided method transformer
+     *
+     * @param methodTransformer method transformer that you want to use
+     */
+
+    public void transform(MethodTransformer methodTransformer) {
+        methods.forEach(memoryMethod -> methodTransformer.transform(this, memoryMethod));
     }
 
     /**
@@ -452,6 +493,26 @@ public class MemoryClass {
 
     public List<AnnotationNode> getInvisibleAnnotations() {
         return classNode.invisibleAnnotations;
+    }
+
+    /**
+     * Gets the access of the class
+     *
+     * @return {@link Integer}
+     */
+
+    public int getAccess() {
+        return classNode.access;
+    }
+
+    /**
+     * Sets the access of the class
+     *
+     * @param access access that you want to set it to
+     */
+
+    public void setAccess(int access) {
+        classNode.access = access;
     }
 
     /**

@@ -119,6 +119,26 @@ public class MemoryMethod {
     }
 
     /**
+     * Gets the access of the method
+     *
+     * @return {@link Integer}
+     */
+
+    public int getAccess() {
+        return methodNode.access;
+    }
+
+    /**
+     * Sets the access of the method
+     *
+     * @param access access that you want to set it to
+     */
+
+    public void setAccess(int access) {
+        methodNode.access = access;
+    }
+
+    /**
      * Checks if the provided object is equal to this object
      *
      * @param obj object that you are trying to check

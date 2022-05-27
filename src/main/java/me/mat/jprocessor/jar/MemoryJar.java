@@ -5,6 +5,9 @@ import me.mat.jprocessor.JProcessor;
 import me.mat.jprocessor.jar.cls.MemoryClass;
 import me.mat.jprocessor.jar.cls.MemoryManifest;
 import me.mat.jprocessor.mappings.MappingManager;
+import me.mat.jprocessor.transformer.ClassTransformer;
+import me.mat.jprocessor.transformer.FieldTransformer;
+import me.mat.jprocessor.transformer.MethodTransformer;
 import me.mat.jprocessor.util.JarUtil;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
@@ -83,6 +86,39 @@ public class MemoryJar {
         if (classes.containsKey(mainClass)) {
             classes.get(mainClass).isMainClass = true;
         }
+    }
+
+    /**
+     * Transforms all the classes
+     * wit the provided class transformer
+     *
+     * @param classTransformer class transformer that you want to use to transform
+     */
+
+    public void transformClasses(ClassTransformer classTransformer) {
+        classes.forEach((className, memoryClass) -> memoryClass.transform(classTransformer));
+    }
+
+    /**
+     * Transforms all the fields
+     * wit the provided field transformer
+     *
+     * @param fieldTransformer field transformer that you want to use to transform
+     */
+
+    public void transformFields(FieldTransformer fieldTransformer) {
+        classes.forEach((className, memoryClass) -> memoryClass.transform(fieldTransformer));
+    }
+
+    /**
+     * Transforms all the methods
+     * wit the provided method transformer
+     *
+     * @param methodTransformer method transformer that you want to use to transform
+     */
+
+    public void transformMethods(MethodTransformer methodTransformer) {
+        classes.forEach((className, memoryClass) -> memoryClass.transform(methodTransformer));
     }
 
     /**

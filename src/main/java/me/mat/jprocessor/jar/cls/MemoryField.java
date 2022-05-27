@@ -77,6 +77,26 @@ public class MemoryField {
     }
 
     /**
+     * Gets the access of the field
+     *
+     * @return {@link Integer}
+     */
+
+    public int getAccess() {
+        return fieldNode.access;
+    }
+
+    /**
+     * Sets the access of the field
+     *
+     * @param access access that you want to set it to
+     */
+
+    public void setAccess(int access) {
+        fieldNode.access = access;
+    }
+
+    /**
      * Checks if the instruction matches
      * the current field
      *

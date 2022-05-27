@@ -4,11 +4,14 @@ import me.mat.jprocess.util.Manifest;
 import me.mat.jprocessor.JProcessor;
 import me.mat.jprocessor.jar.MemoryJar;
 import me.mat.jprocessor.jar.cls.MemoryClass;
+import me.mat.jprocessor.jar.cls.MemoryField;
+import me.mat.jprocessor.jar.cls.MemoryMethod;
 import me.mat.jprocessor.mappings.MappingLoadException;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.mappings.MappingType;
 import me.mat.jprocessor.mappings.generation.GenerationType;
 import me.mat.jprocessor.mappings.generation.MappingGenerateException;
+import me.mat.jprocessor.transformer.ClassTransformer;
 import org.junit.jupiter.api.Test;
 import org.objectweb.asm.Opcodes;
 
@@ -104,17 +107,8 @@ public class JProcessTest {
                 null, null, null
         );
 
-        // inject a string field into the injected class
-        cls.addField(
-                Opcodes.ACC_PRIVATE + Opcodes.ACC_FINAL, "testString", "Ljava/lang/String;",
-                null, "Hello, World!"
-        );
-
-        // inject a method into the injected class
-        cls.addMethod(
-                Opcodes.ACC_PROTECTED, "testMethod", "()V",
-                null, null
-        );
+        // transform the class
+        cls.transform(new TestClassTransformer());
 
         // save the jar to the output file
         memoryJar.save(TESTS_OUT_JAR_FILE);
@@ -141,6 +135,25 @@ public class JProcessTest {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static final class TestClassTransformer implements ClassTransformer {
+
+        @Override
+        public void transform(MemoryClass memoryClass) {
+
+        }
+
+        @Override
+        public void transform(MemoryClass memoryClass, MemoryField memoryField) {
+
+        }
+
+        @Override
+        public void transform(MemoryClass memoryClass, MemoryMethod memoryMethod) {
+
+        }
+
     }
 
 }

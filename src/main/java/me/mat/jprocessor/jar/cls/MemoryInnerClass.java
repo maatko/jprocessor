@@ -12,4 +12,24 @@ public class MemoryInnerClass {
 
     public MemoryClass outerClass;
 
+    /**
+     * Gets the access of the inner class
+     *
+     * @return {@link Integer}
+     */
+
+    public int getAccess() {
+        return classNode.access;
+    }
+
+    /**
+     * Sets the access of the inner class
+     *
+     * @param access access that you want to set it to
+     */
+
+    public void setAccess(int access) {
+        classNode.access = access;
+    }
+
 }
