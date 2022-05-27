@@ -38,6 +38,8 @@ public class MemoryClass {
 
     public final List<MemoryMethod> methods = new ArrayList<>();
 
+    public final List<MemoryAnnotation> annotations = new ArrayList<>();
+
     @NonNull
     private ClassNode classNode;
 
@@ -55,13 +57,14 @@ public class MemoryClass {
      */
 
     public void initialize(Map<String, MemoryClass> classes) {
-        // clear all the fields and methods
+        // clear all the cache
         fields.clear();
         methods.clear();
         interfaces.clear();
         innerClasses.clear();
         superFields.clear();
         superMethods.clear();
+        annotations.clear();
 
         // get the outer class
         outerClass = classes.get(classNode.outerClass);
@@ -72,11 +75,12 @@ public class MemoryClass {
                 fieldNode.access -= Opcodes.ACC_PRIVATE;
                 fieldNode.access += Opcodes.ACC_PUBLIC;
             }
-            fields.add(new MemoryField(fieldNode));
+            fields.add(new MemoryField(fieldNode).init(classes));
         });
 
         // load all the methods into the memory
-        classNode.methods.forEach(methodNode -> methods.add(new MemoryMethod(this, methodNode)));
+        classNode.methods.forEach(methodNode
+                -> methods.add(new MemoryMethod(this, methodNode).init(classes)));
 
         // find all the extended interfaces
         List<String> interfaces = classNode.interfaces;
@@ -88,15 +92,52 @@ public class MemoryClass {
             });
         }
 
-        // load all the inner classes into the memory
+        // loop through all the inner classes
         classNode.innerClasses.forEach(innerClassNode -> {
+
+            // create a memory inner class
             MemoryInnerClass innerClass = new MemoryInnerClass(innerClassNode);
-            if (classes.containsKey(innerClass.classNode.name)) {
-                innerClass.outerClass = classes.get(innerClass.classNode.name);
+
+            // get the name of the inner class
+            String name = innerClass.name();
+
+            // if the classes pool contains the inner class
+            if (classes.containsKey(name)) {
+
+                // set outer class of the inner class to the class from the pool that matches the name
+                innerClass.outerClass = classes.get(name);
+
+                // update the is inner class flag to true of the outer class
                 innerClass.outerClass.isInnerClass = true;
             }
+
+            // load the inner class to the map
             innerClasses.put(innerClassNode.name, innerClass);
         });
+
+        // get the list of annotations
+        List<AnnotationNode> annotations = classNode.visibleAnnotations;
+
+        // if the list is valid
+        if (annotations != null) {
+
+            // loop through all the annotation nodes
+            annotations.forEach(annotationNode -> {
+
+                // get the class name of the annotation
+                String annotationClass = annotationNode.desc.substring(1, annotationNode.desc.length() - 1);
+
+                // if the classes pool does not contain the annotation class
+                if (!classes.containsKey(annotationClass)) {
+
+                    // throw an exception
+                    throw new RuntimeException("Failed to locate the annotation class: " + annotationClass);
+                }
+
+                // add the annotation to the annotations list
+                this.annotations.add(new MemoryAnnotation(annotationNode, classes.get(annotationClass)));
+            });
+        }
 
         // find the super class
         this.findSuperClass(classes);
@@ -351,6 +392,28 @@ public class MemoryClass {
     }
 
     /**
+     * Checks if the current class has the provided annotation
+     *
+     * @param name name of the annotation that you want to check for
+     * @return {@link Boolean}
+     */
+
+    public boolean isAnnotationPresent(String name) {
+        return getAnnotation(name) != null;
+    }
+
+    /**
+     * Gets the annotation from the current class
+     *
+     * @param name name of the annotation that you want to get
+     * @return {@link MemoryAnnotation}
+     */
+
+    public MemoryAnnotation getAnnotation(String name) {
+        return annotations.stream().filter(memoryAnnotation -> memoryAnnotation.annotationClass.name().equals(name)).findFirst().orElse(null);
+    }
+
+    /**
      * Maps the current class based on the
      * mappings from the provided remapper
      *
@@ -368,6 +431,7 @@ public class MemoryClass {
     /**
      * Writes the class to the provided JarOutputStream
      *
+     * @param memoryJar    memory jar that you want to write from
      * @param outputStream stream that you want to write the class to
      */
 
@@ -388,6 +452,13 @@ public class MemoryClass {
             e.printStackTrace();
         }
     }
+
+    /**
+     * Writes the class to a byte[]
+     *
+     * @param memoryJar memory jar that you want to write from
+     * @return {@link Byte[]}
+     */
 
     public byte[] write(MemoryJar memoryJar) {
         // create the class writer

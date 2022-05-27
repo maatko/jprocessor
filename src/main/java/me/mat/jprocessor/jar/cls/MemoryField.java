@@ -8,13 +8,78 @@ import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.FieldNode;
 
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 public class MemoryField {
 
+    private final List<MemoryAnnotation> annotations = new ArrayList<>();
+
     @NonNull
     private FieldNode fieldNode;
+
+    /**
+     * Loads all the annotation for the current field
+     *
+     * @param classes map of all the loaded classes
+     * @return {@link MemoryField}
+     */
+
+    public MemoryField init(Map<String, MemoryClass> classes) {
+        // clear all the annotations
+        this.annotations.clear();
+
+        // get the list of annotations
+        List<AnnotationNode> annotations = fieldNode.visibleAnnotations;
+
+        // if the list is valid
+        if (annotations != null) {
+
+            // loop through all the annotation nodes
+            annotations.forEach(annotationNode -> {
+
+                // get the class name of the annotation
+                String annotationClass = annotationNode.desc.substring(1, annotationNode.desc.length() - 1);
+
+                // if the classes pool does not contain the annotation class
+                if (!classes.containsKey(annotationClass)) {
+
+                    // throw an exception
+                    throw new RuntimeException("Failed to locate the annotation class: " + annotationClass);
+                }
+
+                // add the annotation to the annotations list
+                this.annotations.add(new MemoryAnnotation(annotationNode, classes.get(annotationClass)));
+            });
+        }
+
+        // return the instance of the field
+        return this;
+    }
+
+    /**
+     * Checks if the current field has the provided annotation
+     *
+     * @param name name of the annotation that you want to check for
+     * @return {@link Boolean}
+     */
+
+    public boolean isAnnotationPresent(String name) {
+        return getAnnotation(name) != null;
+    }
+
+    /**
+     * Gets the annotation from the current field
+     *
+     * @param name name of the annotation that you want to get
+     * @return {@link MemoryAnnotation}
+     */
+
+    public MemoryAnnotation getAnnotation(String name) {
+        return annotations.stream().filter(memoryAnnotation -> memoryAnnotation.annotationClass.name().equals(name)).findFirst().orElse(null);
+    }
 
     /**
      * Gets the name of the field

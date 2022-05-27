@@ -4,11 +4,13 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.objectweb.asm.tree.InnerClassNode;
 
+import java.util.ArrayList;
+
 @RequiredArgsConstructor
 public class MemoryInnerClass {
 
     @NonNull
-    public InnerClassNode classNode;
+    private InnerClassNode classNode;
 
     public MemoryClass outerClass;
 
@@ -30,6 +32,16 @@ public class MemoryInnerClass {
 
     public void setAccess(int access) {
         classNode.access = access;
+    }
+
+    /**
+     * Returns the name of the inner class
+     *
+     * @return {@link String}
+     */
+
+    public String name() {
+        return classNode.name;
     }
 
 }

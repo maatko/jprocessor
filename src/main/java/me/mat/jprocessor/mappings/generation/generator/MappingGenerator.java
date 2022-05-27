@@ -236,9 +236,9 @@ public abstract class MappingGenerator {
 
     void mapAnnotation(List<AnnotationNode> annotations, MemoryMethod memoryMethod, String mapping) {
         if (annotations != null) {
-            for (AnnotationNode visibleAnnotation : annotations) {
+            for (AnnotationNode annotationNode : annotations) {
                 int targetIndex = -1;
-                List<Object> values = visibleAnnotation.values;
+                List<Object> values = annotationNode.values;
                 if (values != null) {
                     for (int i = 0; i < values.size(); i++) {
                         if (values.get(i).equals(memoryMethod.name())) {
@@ -246,7 +246,7 @@ public abstract class MappingGenerator {
                         }
                     }
                     if (targetIndex != -1) {
-                        visibleAnnotation.values.set(targetIndex, mapping);
+                        annotationNode.values.set(targetIndex, mapping);
                     }
                 }
             }
