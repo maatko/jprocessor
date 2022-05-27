@@ -127,15 +127,12 @@ public class MemoryClass {
                 // get the class name of the annotation
                 String annotationClass = annotationNode.desc.substring(1, annotationNode.desc.length() - 1);
 
-                // if the classes pool does not contain the annotation class
-                if (!classes.containsKey(annotationClass)) {
+                // if the classes pool contains the annotation class
+                if (classes.containsKey(annotationClass)) {
 
-                    // throw an exception
-                    throw new RuntimeException("Failed to locate the annotation class: " + annotationClass);
+                    // add the annotation to the annotations list
+                    this.annotations.add(new MemoryAnnotation(annotationNode, classes.get(annotationClass)));
                 }
-
-                // add the annotation to the annotations list
-                this.annotations.add(new MemoryAnnotation(annotationNode, classes.get(annotationClass)));
             });
         }
 

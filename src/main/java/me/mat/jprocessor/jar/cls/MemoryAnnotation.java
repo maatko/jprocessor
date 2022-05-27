@@ -24,6 +24,12 @@ public class MemoryAnnotation {
         // get the list of values
         List<Object> values = annotationNode.values;
 
+        // if the values was not found
+        if (values == null) {
+            // return out of the method
+            return;
+        }
+
         // define a key that all the keys will be stored into
         String key = null;
 
