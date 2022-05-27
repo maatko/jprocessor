@@ -53,6 +53,16 @@ public class MemoryAnnotation {
     }
 
     /**
+     * Gets the value of the annotation
+     *
+     * @return {@link Object}
+     */
+
+    public Object value() {
+        return getValue("value");
+    }
+
+    /**
      * Checks if the current annotation contains the value
      *
      * @param key key that you want to check for

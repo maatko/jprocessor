@@ -400,6 +400,17 @@ public class MemoryClass {
     }
 
     /**
+     * Checks if the current class has the provided annotation
+     *
+     * @param annotation class of the annotation that you want to check
+     * @return {@link Boolean}
+     */
+
+    public boolean isAnnotationPresent(Class<?> annotation) {
+        return isAnnotationPresent(annotation.getName().replaceAll("\\.", "/"));
+    }
+
+    /**
      * Gets the annotation from the current class
      *
      * @param name name of the annotation that you want to get
@@ -408,6 +419,17 @@ public class MemoryClass {
 
     public MemoryAnnotation getAnnotation(String name) {
         return annotations.stream().filter(memoryAnnotation -> memoryAnnotation.annotationClass.name().equals(name)).findFirst().orElse(null);
+    }
+
+    /**
+     * Gets the annotation from the current class
+     *
+     * @param annotation class of the annotation that you want to get
+     * @return {@link MemoryAnnotation}
+     */
+
+    public MemoryAnnotation getAnnotation(Class<?> annotation) {
+        return getAnnotation(annotation.getName().replaceAll("\\.", "/"));
     }
 
     /**
