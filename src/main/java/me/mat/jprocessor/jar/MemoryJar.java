@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.jar.JarOutputStream;
 
 @Getter
@@ -24,6 +25,28 @@ public class MemoryJar {
     private final Map<String, MemoryResource> resources = new HashMap<>();
 
     private MemoryManifest manifest;
+
+    public MemoryJar(Map<String, byte[]> classData) {
+        // log to console that the jar's classes are loading into the memory
+        JProcessor.Logging.info("Loading from provided memory");
+
+        // load all the classes into the memory
+        classData.forEach((className, bytes) -> classes.put(
+                className.replaceAll("\\.", "/"),
+                new MemoryClass(Objects.requireNonNull(JarUtil.getClassNode(bytes)))
+        ));
+
+        // attempt to fix broken inner classes
+        classes.forEach((className, memoryClass) -> {
+            if (memoryClass.isBrokenInnerClass()) {
+                memoryClass.setOuterClass(classes.get(className.split("\\$")[0]));
+            }
+        });
+
+        // setup the class hierarchy
+        classes.forEach((className, memoryClass) -> memoryClass.initialize(classes));
+        classes.forEach((className, memoryClass) -> memoryClass.buildHierarchy());
+    }
 
     public MemoryJar(File file) {
         // log to console that the jar's classes are loading into the memory
@@ -54,9 +77,6 @@ public class MemoryJar {
 
         // log to console how many resources were loaded into memory
         JProcessor.Logging.info("Loaded '%d' resources into memory", resources.size());
-
-        // log to console that the
-        JProcessor.Logging.info("Setting up the class hierarchy");
 
         // get the main class of the jar
         String mainClass = JarUtil.getMainClass(file).replaceAll("\\.", "/");
@@ -137,6 +157,23 @@ public class MemoryJar {
 
     public MemoryClass getClass(String className) {
         return classes.getOrDefault(className, null);
+    }
+
+    /**
+     * Exports all the classes to a map
+     *
+     * @return {@link Map}
+     */
+
+    public Map<String, byte[]> exportClasses() {
+        // create a new map that will hold all the data
+        Map<String, byte[]> data = new HashMap<>();
+
+        // loop through all the class nodes and them to the map
+        classes.forEach((name, memoryClass) -> data.put(name, memoryClass.write(this)));
+
+        // return the data
+        return data;
     }
 
     /**

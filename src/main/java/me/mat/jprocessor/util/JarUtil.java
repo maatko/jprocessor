@@ -113,29 +113,38 @@ public class JarUtil {
      */
 
     public static Stream<ClassNode> load(File jar) {
-        return load(jar, name -> name.endsWith(CLASS_SUFFIX)).map(bytes -> {
-            // read the first 4 bytes of the array
-            String cafeBabe = String.format("%02X%02X%02X%02X", bytes[0], bytes[1], bytes[2], bytes[3]);
+        return load(jar, name -> name.endsWith(CLASS_SUFFIX)).map(JarUtil::getClassNode);
+    }
 
-            // check that the string that was read is equal to the cafe babe
-            if (cafeBabe.equalsIgnoreCase("cafeBabe")) {
+    /**
+     * Reads a class node from the provided data
+     *
+     * @param data data that you want to read into the class node
+     * @return {@link ClassNode}
+     */
 
-                // create the class reader from the input stream
-                ClassReader classReader = new ClassReader(bytes);
+    public static ClassNode getClassNode(byte[] data) {
+        // read the first 4 bytes of the array
+        String cafeBabe = String.format("%02X%02X%02X%02X", data[0], data[1], data[2], data[3]);
 
-                // create a new class node
-                ClassNode classNode = new ClassNode();
+        // check that the string that was read is equal to the cafe babe
+        if (cafeBabe.equalsIgnoreCase("cafeBabe")) {
 
-                // write the bytes of the class to the class node
-                classReader.accept(classNode, 0);
+            // create the class reader from the input stream
+            ClassReader classReader = new ClassReader(data);
 
-                // return the class node
-                return classNode;
-            }
+            // create a new class node
+            ClassNode classNode = new ClassNode();
 
-            // else return null
-            return null;
-        });
+            // write the bytes of the class to the class node
+            classReader.accept(classNode, 0);
+
+            // return the class node
+            return classNode;
+        }
+
+        // else just return null
+        return null;
     }
 
     /**

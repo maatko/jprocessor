@@ -16,6 +16,7 @@ import me.mat.jprocessor.util.log.Logger;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -24,6 +25,27 @@ public class JProcessor {
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(10);
 
     public static final class Jar {
+
+        /**
+         * Loads a memory jar from the provided classes
+         *
+         * @param classes classes that you want to load
+         * @return {@link MemoryJar}
+         */
+
+        public static MemoryJar load(Map<String, byte[]> classes) {
+            return new MemoryJar(classes);
+        }
+
+        /**
+         * Loads a memory jar from the provided classes asynchronously
+         *
+         * @param classes classes that you want to load
+         */
+
+        public static void load(Map<String, byte[]> classes, JarLoadCallback callback) {
+            EXECUTOR_SERVICE.submit(() -> callback.onLoad(load(classes)));
+        }
 
         /**
          * Loads a jar into the memory from the provided path

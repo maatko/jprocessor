@@ -4,8 +4,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import me.mat.jprocessor.jar.MemoryJar;
 import me.mat.jprocessor.mappings.MappingManager;
+import me.mat.jprocessor.mappings.remapper.JClassRemapper;
 import me.mat.jprocessor.util.asm.CustomClassWriter;
-import me.mat.jprocessor.util.asm.remapper.JClassRemapper;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
@@ -346,6 +346,17 @@ public class MemoryClass {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public byte[] write(MemoryJar memoryJar) {
+        // create the class writer
+        CustomClassWriter classWriter = new CustomClassWriter(memoryJar, ClassWriter.COMPUTE_MAXS);
+
+        // load the class bytes into the class writer
+        classNode.accept(classWriter);
+
+        // return the data of the class writer
+        return classWriter.toByteArray();
     }
 
     /**

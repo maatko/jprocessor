@@ -1,4 +1,4 @@
-package me.mat.jprocessor.util.asm.remapper;
+package me.mat.jprocessor.mappings.remapper;
 
 import me.mat.jprocessor.jar.MemoryJar;
 import me.mat.jprocessor.jar.cls.MemoryClass;
