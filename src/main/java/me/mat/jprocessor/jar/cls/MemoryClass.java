@@ -549,8 +549,13 @@ public class MemoryClass {
      */
 
     public void setOuterClass(MemoryClass memoryClass) {
-        this.outerClass = memoryClass;
-        this.classNode.outerClass = memoryClass.name();
+        // if the memory class is valid
+        if (memoryClass != null) {
+
+            // update the outer class data
+            this.outerClass = memoryClass;
+            this.classNode.outerClass = memoryClass.name();
+        }
     }
 
     /**

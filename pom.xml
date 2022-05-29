@@ -6,7 +6,7 @@
 
     <groupId>me.mat</groupId>
     <artifactId>jprocessor</artifactId>
-    <version>1.4.4</version>
+    <version>1.4.5</version>
 
     <name>jprocessor</name>
     <description>Java class manipulation library</description>
