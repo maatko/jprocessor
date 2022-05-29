@@ -32,23 +32,42 @@ public class MemoryJar {
         // log to console that the jar's classes are loading into the memory
         JProcessor.Logging.info("Loading from provided memory");
 
-        // load all the classes into the memory
+        // loop through all the class data
         classData.forEach((className, bytes) -> {
+
+            // get the class node from the class data
             ClassNode classNode = JarUtil.getClassNode(bytes);
+
+            // if the class node was created
             if (classNode != null) {
+
+                // load the class node into memory jar
                 classes.put(
                         className.replaceAll("\\.", "/"),
                         new MemoryClass(classNode)
                 );
             } else {
+
+                // else if it was not created log to console that it was an invalid class
                 System.err.println("[!] Invalid class '" + className + "'");
             }
         });
 
         // attempt to fix broken inner classes
         classes.forEach((className, memoryClass) -> {
+
+            // check if the memory class is a broken inner class
             if (memoryClass.isBrokenInnerClass()) {
-                memoryClass.setOuterClass(classes.get(className.split("\\$")[0]));
+
+                // if so get the outer class from the pool
+                MemoryClass outerClass = classes.get(className.split("\\$")[0]);
+
+                // if the class was found
+                if (outerClass != null) {
+
+                    // set classes outer class to the new outer class
+                    memoryClass.setOuterClass(outerClass);
+                }
             }
         });
 
@@ -79,8 +98,19 @@ public class MemoryJar {
 
         // attempt to fix broken inner classes
         classes.forEach((className, memoryClass) -> {
+
+            // check if the memory class is a broken inner class
             if (memoryClass.isBrokenInnerClass()) {
-                memoryClass.setOuterClass(classes.get(className.split("\\$")[0]));
+
+                // if so get the outer class from the pool
+                MemoryClass outerClass = classes.get(className.split("\\$")[0]);
+
+                // if the class was found
+                if (outerClass != null) {
+
+                    // set classes outer class to the new outer class
+                    memoryClass.setOuterClass(outerClass);
+                }
             }
         });
 
