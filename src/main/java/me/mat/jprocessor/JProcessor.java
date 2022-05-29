@@ -33,8 +33,8 @@ public class JProcessor {
          * @return {@link MemoryJar}
          */
 
-        public static MemoryJar load(Map<String, byte[]> classes) {
-            return new MemoryJar(classes);
+        public static MemoryJar load(Map<String, byte[]> classes, String mainClass) {
+            return new MemoryJar(classes, mainClass);
         }
 
         /**
@@ -43,8 +43,8 @@ public class JProcessor {
          * @param classes classes that you want to load
          */
 
-        public static void load(Map<String, byte[]> classes, JarLoadCallback callback) {
-            EXECUTOR_SERVICE.submit(() -> callback.onLoad(load(classes)));
+        public static void load(Map<String, byte[]> classes, String mainClass, JarLoadCallback callback) {
+            EXECUTOR_SERVICE.submit(() -> callback.onLoad(load(classes, mainClass)));
         }
 
         /**

@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.jar.JarOutputStream;
 
 @Getter
@@ -29,15 +28,22 @@ public class MemoryJar {
 
     private MemoryManifest manifest;
 
-    public MemoryJar(Map<String, byte[]> classData) {
+    public MemoryJar(Map<String, byte[]> classData, String mainClass) {
         // log to console that the jar's classes are loading into the memory
         JProcessor.Logging.info("Loading from provided memory");
 
         // load all the classes into the memory
-        classData.forEach((className, bytes) -> classes.put(
-                className.replaceAll("\\.", "/"),
-                new MemoryClass(Objects.requireNonNull(JarUtil.getClassNode(bytes)))
-        ));
+        classData.forEach((className, bytes) -> {
+            ClassNode classNode = JarUtil.getClassNode(bytes);
+            if (classNode != null) {
+                classes.put(
+                        className.replaceAll("\\.", "/"),
+                        new MemoryClass(classNode)
+                );
+            } else {
+                System.err.println("[!] Invalid class '" + className + "'");
+            }
+        });
 
         // attempt to fix broken inner classes
         classes.forEach((className, memoryClass) -> {
@@ -49,6 +55,16 @@ public class MemoryJar {
         // setup the class hierarchy
         classes.forEach((className, memoryClass) -> memoryClass.initialize(classes));
         classes.forEach((className, memoryClass) -> memoryClass.buildHierarchy());
+
+        // log to console how many classes were loaded
+        JProcessor.Logging.info("Loaded '%d' classes into memory", classes.size());
+
+        // if the classes pool contains the main class
+        if (classes.containsKey(mainClass)) {
+
+            // update the main class flag in the target class
+            classes.get(mainClass).isMainClass = true;
+        }
     }
 
     public MemoryJar(File file) {
