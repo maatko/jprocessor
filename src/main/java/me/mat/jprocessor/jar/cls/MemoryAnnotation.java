@@ -40,7 +40,7 @@ public class MemoryAnnotation {
             Object value = values.get(i);
 
             // if the current index is matching the value index
-            if (i > 0 && i % 2 == 0) {
+            if (i > 0 && i % 2 != 0) {
 
                 // load the value based on the key and the value
                 this.values.put(key, value);
@@ -53,7 +53,7 @@ public class MemoryAnnotation {
     }
 
     /**
-     * Gets the value of the annotation
+     * Gets the value of the ćannotation
      *
      * @return {@link Object}
      */
