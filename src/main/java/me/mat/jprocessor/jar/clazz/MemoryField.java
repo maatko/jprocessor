@@ -1,4 +1,4 @@
-package me.mat.jprocessor.jar.cls;
+package me.mat.jprocessor.jar.clazz;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -159,7 +159,7 @@ public class MemoryField {
      * @return {@link Boolean}
      */
 
-    public boolean iStatic() {
+    public boolean isStatic() {
         return Modifier.isStatic(fieldNode.access);
     }
 
@@ -192,13 +192,13 @@ public class MemoryField {
      */
 
     public boolean isCorrectInstruction(int instruction) {
-        if (instruction == Opcodes.GETSTATIC && !iStatic()) {
+        if (instruction == Opcodes.GETSTATIC && !isStatic()) {
             return false;
-        } else if (instruction == Opcodes.PUTSTATIC && (!iStatic() || isFinal())) {
+        } else if (instruction == Opcodes.PUTSTATIC && (!isStatic() || isFinal())) {
             return false;
-        } else if (instruction == Opcodes.GETFIELD && iStatic()) {
+        } else if (instruction == Opcodes.GETFIELD && isStatic()) {
             return false;
-        } else return instruction != Opcodes.PUTFIELD || (!iStatic() && !isFinal());
+        } else return instruction != Opcodes.PUTFIELD || (!isStatic() && !isFinal());
     }
 
     /**

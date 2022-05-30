@@ -2,8 +2,8 @@ package me.mat.jprocessor.jar;
 
 import lombok.Getter;
 import me.mat.jprocessor.JProcessor;
-import me.mat.jprocessor.jar.cls.MemoryClass;
-import me.mat.jprocessor.jar.cls.MemoryManifest;
+import me.mat.jprocessor.jar.clazz.MemoryClass;
+import me.mat.jprocessor.jar.clazz.MemoryManifest;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.transformer.ClassTransformer;
 import me.mat.jprocessor.transformer.FieldTransformer;

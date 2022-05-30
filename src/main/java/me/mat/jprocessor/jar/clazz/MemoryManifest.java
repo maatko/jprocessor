@@ -1,4 +1,4 @@
-package me.mat.jprocessor.jar.cls;
+package me.mat.jprocessor.jar.clazz;
 
 import lombok.Getter;
 import me.mat.jprocessor.util.JarUtil;

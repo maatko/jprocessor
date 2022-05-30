@@ -1,7 +1,7 @@
 package me.mat.jprocessor.transformer;
 
-import me.mat.jprocessor.jar.cls.MemoryClass;
-import me.mat.jprocessor.jar.cls.MemoryMethod;
+import me.mat.jprocessor.jar.clazz.MemoryClass;
+import me.mat.jprocessor.jar.clazz.MemoryMethod;
 
 public interface MethodTransformer {
 

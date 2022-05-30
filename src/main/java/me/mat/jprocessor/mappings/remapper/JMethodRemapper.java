@@ -1,9 +1,9 @@
 package me.mat.jprocessor.mappings.remapper;
 
 import me.mat.jprocessor.jar.MemoryJar;
-import me.mat.jprocessor.jar.cls.MemoryClass;
-import me.mat.jprocessor.jar.cls.MemoryField;
-import me.mat.jprocessor.jar.cls.MemoryMethod;
+import me.mat.jprocessor.jar.clazz.MemoryClass;
+import me.mat.jprocessor.jar.clazz.MemoryField;
+import me.mat.jprocessor.jar.clazz.MemoryMethod;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.mappings.mapping.FieldMapping;
 import me.mat.jprocessor.mappings.mapping.MethodMapping;

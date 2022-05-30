@@ -1,6 +1,6 @@
 package me.mat.jprocessor.transformer;
 
-import me.mat.jprocessor.jar.cls.MemoryClass;
+import me.mat.jprocessor.jar.clazz.MemoryClass;
 
 public interface ClassTransformer extends FieldTransformer, MethodTransformer {
 
