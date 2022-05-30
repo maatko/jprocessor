@@ -18,6 +18,9 @@ public class MemoryField {
     private final List<MemoryAnnotation> annotations = new ArrayList<>();
 
     @NonNull
+    public MemoryClass parent;
+
+    @NonNull
     private FieldNode fieldNode;
 
     /**

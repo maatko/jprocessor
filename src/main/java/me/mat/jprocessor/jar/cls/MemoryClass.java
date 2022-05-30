@@ -75,7 +75,7 @@ public class MemoryClass {
                 fieldNode.access -= Opcodes.ACC_PRIVATE;
                 fieldNode.access += Opcodes.ACC_PUBLIC;
             }
-            fields.add(new MemoryField(fieldNode).init(classes));
+            fields.add(new MemoryField(this, fieldNode).init(classes));
         });
 
         // load all the methods into the memory
@@ -259,7 +259,7 @@ public class MemoryClass {
         classNode.fields.add(fieldNode);
 
         MemoryField memoryField;
-        fields.add(memoryField = new MemoryField(fieldNode));
+        fields.add(memoryField = new MemoryField(this, fieldNode));
         return memoryField;
     }
 
@@ -662,6 +662,17 @@ public class MemoryClass {
 
     boolean hasModifier(int modifier) {
         return (classNode.access & modifier) != 0;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof ClassNode) {
+            return ((ClassNode) obj).name.equals(name());
+        } else if (obj instanceof MemoryClass) {
+            return ((MemoryClass) obj).name().equals(name());
+        } else {
+            return false;
+        }
     }
 
 }

@@ -7,6 +7,7 @@ import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodNode;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,8 @@ public class MemoryMethod {
     @NonNull
     private MethodNode methodNode;
 
+    public MemoryInstructions instructions;
+
     public MemoryClass baseClass = null;
     public MemoryMethod baseMethod = null;
 
@@ -33,6 +36,9 @@ public class MemoryMethod {
      */
 
     public MemoryMethod init(Map<String, MemoryClass> classes) {
+        // define new memory instructions for the current method
+        this.instructions = new MemoryInstructions(this, methodNode.instructions);
+
         // clear all the annotations
         this.annotations.clear();
 
@@ -127,6 +133,16 @@ public class MemoryMethod {
 
     public boolean isChangeable() {
         return ASMUtil.isChangeable(methodNode) && !isMainMethod();
+    }
+
+    /**
+     * Checks if the method is static
+     *
+     * @return {@link Boolean}
+     */
+
+    public boolean isStatic() {
+        return Modifier.isStatic(getAccess());
     }
 
     /**

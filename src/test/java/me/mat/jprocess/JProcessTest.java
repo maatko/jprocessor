@@ -5,6 +5,7 @@ import me.mat.jprocessor.JProcessor;
 import me.mat.jprocessor.jar.MemoryJar;
 import me.mat.jprocessor.jar.cls.MemoryClass;
 import me.mat.jprocessor.jar.cls.MemoryField;
+import me.mat.jprocessor.jar.cls.MemoryInstructions;
 import me.mat.jprocessor.jar.cls.MemoryMethod;
 import me.mat.jprocessor.mappings.MappingLoadException;
 import me.mat.jprocessor.mappings.MappingManager;
@@ -14,6 +15,9 @@ import me.mat.jprocessor.mappings.generation.MappingGenerateException;
 import me.mat.jprocessor.transformer.ClassTransformer;
 import org.junit.jupiter.api.Test;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.InsnNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.VarInsnNode;
 
 import java.io.*;
 import java.net.URL;
@@ -106,6 +110,30 @@ public class JProcessTest {
                 Opcodes.V1_8, Opcodes.ACC_PUBLIC, "me/mat/jprocessor/TestClass",
                 null, null, null
         );
+
+        MemoryMethod method = cls.addMethod(
+                Opcodes.ACC_PRIVATE,
+                "testMethod",
+                "()V",
+                null,
+                null
+        ).init(memoryJar.getClasses());
+
+        MemoryMethod caller = cls.addMethod(
+                Opcodes.ACC_PRIVATE,
+                "<init>",
+                "()V",
+                null,
+                null
+        ).init(memoryJar.getClasses());
+
+        MemoryInstructions instructions = caller.instructions;
+        MethodInsnNode invokeInstruction = instructions.createInvoke(method);
+        if (invokeInstruction.getOpcode() == Opcodes.INVOKESPECIAL) {
+            instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
+        }
+        instructions.add(invokeInstruction);
+        instructions.add(new InsnNode(Opcodes.RETURN));
 
         // transform the class
         cls.transform(new TestClassTransformer());
