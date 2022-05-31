@@ -4,13 +4,12 @@ import lombok.Setter;
 import me.mat.jprocessor.jar.MemoryJar;
 import me.mat.jprocessor.jar.clazz.MemoryClass;
 import me.mat.jprocessor.jar.clazz.MemoryField;
+import me.mat.jprocessor.jar.clazz.MemoryLocalVariable;
 import me.mat.jprocessor.jar.clazz.MemoryMethod;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.mappings.mapping.Mapping;
 import me.mat.jprocessor.mappings.mapping.MethodMapping;
-import org.objectweb.asm.tree.AnnotationNode;
 
-import java.util.List;
 import java.util.Map;
 
 public abstract class MappingGenerator {
@@ -23,6 +22,8 @@ public abstract class MappingGenerator {
     public abstract String mapField(String className, MemoryClass memoryClass, MemoryField memoryField);
 
     public abstract String mapMethod(String className, MemoryClass memoryClass, MemoryMethod memoryMethod);
+
+    public abstract String mapLocalVariable(String className, MemoryClass memoryClass, MemoryMethod memoryMethod, MemoryLocalVariable localVariable);
 
     /**
      * Generates mappings for the provided jar file
@@ -39,7 +40,7 @@ public abstract class MappingGenerator {
             // check that the class is not an inner class
             if (!memoryClass.isInnerClass) {
                 // generate mappings for the current class
-                generateClass(className, memoryJar, memoryClass);
+                generateClass(className, memoryClass);
             }
         });
 
@@ -48,7 +49,7 @@ public abstract class MappingGenerator {
             // check that the class is an inner class
             if (memoryClass.isInnerClass) {
                 // generate mappings for the current class
-                generateClass(className, memoryJar, memoryClass);
+                generateClass(className, memoryClass);
             }
         });
 
@@ -91,7 +92,7 @@ public abstract class MappingGenerator {
      * @param memoryClass instance of the MemoryClass of the class that you want to map
      */
 
-    void generateClass(String className, MemoryJar memoryJar, MemoryClass memoryClass) {
+    void generateClass(String className, MemoryClass memoryClass) {
         // check that the current class is not a main class
         if (!memoryClass.isMainClass) {
             // create a string builder that will hold the mapping
@@ -138,13 +139,17 @@ public abstract class MappingGenerator {
 
         // loop through all the methods in the class and map them
         memoryClass.methods.stream().filter(MemoryMethod::isChangeable).forEach(memoryMethod -> {
+
             // if the method is not found
             if (!memoryMethod.isOverride()) {
+
                 // generate the mapping
                 String mapping = mapMethod(className, memoryClass, memoryMethod);
 
                 // map the current method
                 String description = memoryMethod.description();
+
+                // map the method
                 mappingManager.mapMethod(
                         memoryMethod.name(),
                         mapping,
@@ -152,6 +157,10 @@ public abstract class MappingGenerator {
                         description
                 );
             }
+
+            // map all the local variables
+            memoryMethod.localVariables.forEach(localVariable
+                    -> localVariable.setName(mapLocalVariable(className, memoryClass, memoryMethod, localVariable)));
         });
     }
 

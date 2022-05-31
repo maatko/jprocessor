@@ -2,6 +2,7 @@ package me.mat.jprocessor.mappings.generation.generator.impl;
 
 import me.mat.jprocessor.jar.clazz.MemoryClass;
 import me.mat.jprocessor.jar.clazz.MemoryField;
+import me.mat.jprocessor.jar.clazz.MemoryLocalVariable;
 import me.mat.jprocessor.jar.clazz.MemoryMethod;
 import me.mat.jprocessor.mappings.generation.generator.MappingGenerator;
 
@@ -11,11 +12,13 @@ public class AlphabetMappingGenerator extends MappingGenerator {
 
     private NameGenerator fieldNameGenerator;
     private NameGenerator methodNameGenerator;
+    private NameGenerator localVariableNameGenerator;
 
     @Override
     public String mapClass(String className, MemoryClass memoryClass) {
         this.fieldNameGenerator = new NameGenerator();
         this.methodNameGenerator = new NameGenerator();
+        this.localVariableNameGenerator = new NameGenerator();
         return classNameGenerator.generate();
     }
 
@@ -26,7 +29,13 @@ public class AlphabetMappingGenerator extends MappingGenerator {
 
     @Override
     public String mapMethod(String className, MemoryClass memoryClass, MemoryMethod memoryMethod) {
+        this.localVariableNameGenerator = new NameGenerator();
         return methodNameGenerator.generate();
+    }
+
+    @Override
+    public String mapLocalVariable(String className, MemoryClass memoryClass, MemoryMethod memoryMethod, MemoryLocalVariable localVariable) {
+        return localVariableNameGenerator.generate();
     }
 
     private static final class NameGenerator {

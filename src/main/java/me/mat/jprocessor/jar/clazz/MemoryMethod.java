@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import me.mat.jprocessor.util.asm.ASMUtil;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.lang.reflect.Modifier;
@@ -17,6 +16,8 @@ import java.util.Map;
 public class MemoryMethod {
 
     private final List<MemoryAnnotation> annotations = new ArrayList<>();
+
+    public final List<MemoryLocalVariable> localVariables = new ArrayList<>();
 
     @NonNull
     public MemoryClass parent;
@@ -62,6 +63,14 @@ public class MemoryMethod {
                     this.annotations.add(new MemoryAnnotation(annotationNode, classes.get(annotationClass)));
                 }
             });
+        }
+
+        // if the local variables are valid
+        if (methodNode.localVariables != null) {
+
+            // loop through all the variables and load them into the memory
+            methodNode.localVariables.forEach(localVariableNode
+                    -> localVariables.add(new MemoryLocalVariable(localVariableNode)));
         }
 
         // return the instance of the field

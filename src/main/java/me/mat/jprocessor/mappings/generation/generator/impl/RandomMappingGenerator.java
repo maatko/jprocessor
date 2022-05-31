@@ -2,6 +2,7 @@ package me.mat.jprocessor.mappings.generation.generator.impl;
 
 import me.mat.jprocessor.jar.clazz.MemoryClass;
 import me.mat.jprocessor.jar.clazz.MemoryField;
+import me.mat.jprocessor.jar.clazz.MemoryLocalVariable;
 import me.mat.jprocessor.jar.clazz.MemoryMethod;
 import me.mat.jprocessor.mappings.generation.generator.MappingGenerator;
 
@@ -15,11 +16,13 @@ public class RandomMappingGenerator extends MappingGenerator {
 
     private RandomNameGenerator fieldNameGenerator;
     private RandomNameGenerator methodNameGenerator;
+    private RandomNameGenerator localVariableGenerator;
 
     @Override
     public String mapClass(String className, MemoryClass memoryClass) {
         fieldNameGenerator = new RandomNameGenerator();
         methodNameGenerator = new RandomNameGenerator();
+        localVariableGenerator = new RandomNameGenerator();
         return classNameGenerator.generate();
     }
 
@@ -30,7 +33,13 @@ public class RandomMappingGenerator extends MappingGenerator {
 
     @Override
     public String mapMethod(String className, MemoryClass memoryClass, MemoryMethod memoryMethod) {
+        localVariableGenerator = new RandomNameGenerator();
         return methodNameGenerator.generate();
+    }
+
+    @Override
+    public String mapLocalVariable(String className, MemoryClass memoryClass, MemoryMethod memoryMethod, MemoryLocalVariable localVariable) {
+        return localVariableGenerator.generate();
     }
 
     public static final class RandomNameGenerator {

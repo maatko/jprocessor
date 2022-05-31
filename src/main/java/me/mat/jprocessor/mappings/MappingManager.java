@@ -68,6 +68,11 @@ public class MappingManager extends SimpleRemapper {
         // build the mapping data
         processor.build(classMappings, reverseClassMappings, fieldMappings, methodMappings);
 
+        // build all the local variable names
+        memoryJar.getClasses().forEach((className, memoryClass)
+                -> processor.buildLocalVariables(memoryClass, memoryClass.methods));
+
+
         // log the loaded data to the console
         JProcessor.Logging.info("Loaded '%d' class mappings", classMappings.size());
         JProcessor.Logging.info("Loaded '%d' field mappings", fieldMappings.size());
@@ -187,7 +192,7 @@ public class MappingManager extends SimpleRemapper {
     /**
      * Gets a class mapping by the name of the class
      *
-     * @param name name of the class that you want to retrive
+     * @param name name of the class that you want to retrieve
      * @return {@link Mapping}
      */
 

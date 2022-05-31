@@ -1,5 +1,7 @@
 package me.mat.jprocessor.mappings.mapping.processor;
 
+import me.mat.jprocessor.jar.clazz.MemoryClass;
+import me.mat.jprocessor.jar.clazz.MemoryMethod;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.mappings.mapping.FieldMapping;
 import me.mat.jprocessor.mappings.mapping.Mapping;
@@ -13,6 +15,8 @@ public interface MappingProcessor {
     void process(String line);
 
     void build(Map<String, Mapping> classMappings, Map<String, Mapping> reverseClassMappings, Map<String, List<FieldMapping>> fieldMappings, Map<String, List<MethodMapping>> methodMappings);
+
+    void buildLocalVariables(MemoryClass memoryClass, List<MemoryMethod> methods);
 
     void manager(MappingManager mappingManager);
 

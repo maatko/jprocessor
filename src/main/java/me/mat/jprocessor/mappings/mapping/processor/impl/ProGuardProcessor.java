@@ -1,5 +1,8 @@
 package me.mat.jprocessor.mappings.mapping.processor.impl;
 
+import jdk.internal.org.objectweb.asm.Type;
+import me.mat.jprocessor.jar.clazz.MemoryClass;
+import me.mat.jprocessor.jar.clazz.MemoryMethod;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.mappings.mapping.FieldMapping;
 import me.mat.jprocessor.mappings.mapping.Mapping;
@@ -7,10 +10,14 @@ import me.mat.jprocessor.mappings.mapping.MethodMapping;
 import me.mat.jprocessor.mappings.mapping.processor.MappingProcessor;
 import me.mat.jprocessor.util.asm.ASMUtil;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ProGuardProcessor implements MappingProcessor {
+
+    private final Map<MemoryMethod, Map<String, Integer>> localVariableCounters = new HashMap<>();
 
     private static final String TAB = "    ";
     private static final String DELIMITER = " -> ";
@@ -73,6 +80,48 @@ public class ProGuardProcessor implements MappingProcessor {
             // build the mapped version of the description
             methodMapping.mappedDescription = buildDescription(methodMapping.mappedDescription, methodMapping.mappedReturnType, true);
         }));
+    }
+
+    @Override
+    public void buildLocalVariables(MemoryClass memoryClass, List<MemoryMethod> methods) {
+        // loop through all the methods
+        methods.forEach(memoryMethod -> {
+
+            // define a counter for each method
+            AtomicReference<Integer> counter = new AtomicReference<>(0);
+
+            // loop through all the local variables
+            memoryMethod.localVariables.forEach(localVariable -> {
+
+                // get the type name from the description
+                String name = Type.getType(localVariable.desc()).getClassName();
+
+                // if the name was found
+                if (name != null) {
+
+                    // get the mapping
+                    Mapping mapping = reverseClassMappings.get(name);
+
+                    // if the mapping was found
+                    if (mapping != null) {
+
+                        // update the name
+                        name = mapping.name;
+                    }
+
+                    // if the name contains a slash
+                    if (name.contains("/")) {
+
+                        // get the last name from the path
+                        name = name.substring(name.lastIndexOf("/") + 1);
+                    }
+
+                    // and last update the name of the local variable
+                    localVariable.setName(Character.toLowerCase(name.charAt(0))
+                            + name.substring(1) + "Var" + counter.getAndSet(counter.get() + 1));
+                }
+            });
+        });
     }
 
     @Override
