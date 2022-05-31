@@ -7,8 +7,6 @@ import me.mat.jprocessor.jar.clazz.MemoryMethod;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.mappings.mapping.FieldMapping;
 import me.mat.jprocessor.mappings.mapping.MethodMapping;
-import me.mat.jprocessor.util.asm.ASMUtil;
-import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.commons.MethodRemapper;
 import org.objectweb.asm.commons.Remapper;
@@ -60,7 +58,7 @@ public class JMethodRemapper extends MethodRemapper {
                     // find the method in the super methods
                     AtomicReference<MemoryClass> classReference = new AtomicReference<>(null);
                     AtomicReference<MemoryMethod> methodReference = new AtomicReference<>(null);
-                    memoryClass.getMethod(name, descriptor, classReference, methodReference);
+                    memoryClass.findOverrideMethod(name, descriptor, classReference, methodReference);
 
                     // get the method and the super class
                     MemoryMethod method = methodReference.get();
@@ -114,7 +112,7 @@ public class JMethodRemapper extends MethodRemapper {
                 // find the field from one of the super classes
                 AtomicReference<MemoryClass> classReference = new AtomicReference<>(null);
                 AtomicReference<MemoryField> fieldReference = new AtomicReference<>(null);
-                memoryClass.findField(opcode, name, descriptor, classReference, fieldReference);
+                memoryClass.findOverrideField(opcode, name, descriptor, classReference, fieldReference);
 
                 // get the field and the super class
                 MemoryField field = fieldReference.get();

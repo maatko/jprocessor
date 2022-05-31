@@ -288,8 +288,8 @@ public class MemoryClass {
      * @param fieldReference reference that the field will be stored in
      */
 
-    public void findField(int instruction, String name, String descriptor, AtomicReference<MemoryClass> classReference, AtomicReference<MemoryField> fieldReference) {
-        findField(this, name, descriptor, instruction, classReference, fieldReference);
+    public void findOverrideField(int instruction, String name, String descriptor, AtomicReference<MemoryClass> classReference, AtomicReference<MemoryField> fieldReference) {
+        findOverrideField(this, name, descriptor, instruction, classReference, fieldReference);
     }
 
     /**
@@ -304,9 +304,9 @@ public class MemoryClass {
      * @param fieldReference reference that the field will be stored in
      */
 
-    void findField(MemoryClass superClass, String name,
-                   String descriptor, int instruction,
-                   AtomicReference<MemoryClass> classReference, AtomicReference<MemoryField> fieldReference) {
+    void findOverrideField(MemoryClass superClass, String name,
+                           String descriptor, int instruction,
+                           AtomicReference<MemoryClass> classReference, AtomicReference<MemoryField> fieldReference) {
         // if the current super class is invalid
         if (superClass == null) {
             // return out of the method
@@ -337,10 +337,10 @@ public class MemoryClass {
 
         // search for the field in all the interfaces
         superClass.interfaces.forEach((className, interfaceClass)
-                -> findField(interfaceClass, name, descriptor, instruction, classReference, fieldReference));
+                -> findOverrideField(interfaceClass, name, descriptor, instruction, classReference, fieldReference));
 
         // continue the search in the next super class
-        findField(superClass.superClass, name, descriptor, instruction, classReference, fieldReference);
+        findOverrideField(superClass.superClass, name, descriptor, instruction, classReference, fieldReference);
     }
 
     /**
@@ -388,7 +388,7 @@ public class MemoryClass {
      * @param methodReference reference that the method will be stored into
      */
 
-    public void getMethod(String name, String descriptor, AtomicReference<MemoryClass> classReference, AtomicReference<MemoryMethod> methodReference) {
+    public void findOverrideMethod(String name, String descriptor, AtomicReference<MemoryClass> classReference, AtomicReference<MemoryMethod> methodReference) {
         Map<MemoryClass, List<MemoryMethod>> methodMap = new HashMap<>();
         methodMap.put(this, methods);
         methodMap.putAll(superMethods);
