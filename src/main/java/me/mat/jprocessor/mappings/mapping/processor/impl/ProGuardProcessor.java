@@ -8,7 +8,6 @@ import me.mat.jprocessor.mappings.mapping.Mapping;
 import me.mat.jprocessor.mappings.mapping.MethodMapping;
 import me.mat.jprocessor.mappings.mapping.processor.MappingProcessor;
 import me.mat.jprocessor.util.asm.ASMUtil;
-import org.objectweb.asm.Type;
 
 import java.util.HashMap;
 import java.util.List;
@@ -90,37 +89,9 @@ public class ProGuardProcessor implements MappingProcessor {
             // define a counter for each method
             AtomicReference<Integer> counter = new AtomicReference<>(0);
 
-            // loop through all the local variables
-            memoryMethod.localVariables.forEach(localVariable -> {
-
-                // get the type name from the description
-                String name = Type.getType(localVariable.desc()).getClassName();
-
-                // if the name was found
-                if (name != null) {
-
-                    // get the mapping
-                    Mapping mapping = reverseClassMappings.get(name);
-
-                    // if the mapping was found
-                    if (mapping != null) {
-
-                        // update the name
-                        name = mapping.name;
-                    }
-
-                    // if the name contains a slash
-                    if (name.contains("/")) {
-
-                        // get the last name from the path
-                        name = name.substring(name.lastIndexOf("/") + 1);
-                    }
-
-                    // and last update the name of the local variable
-                    localVariable.setName(Character.toLowerCase(name.charAt(0))
-                            + name.substring(1) + "Var" + counter.getAndSet(counter.get() + 1));
-                }
-            });
+            // loop through all the local variables and generate the variable names
+            memoryMethod.localVariables.forEach(localVariable
+                    -> localVariable.setName("var" + counter.getAndSet(counter.get() + 1)));
         });
     }
 
