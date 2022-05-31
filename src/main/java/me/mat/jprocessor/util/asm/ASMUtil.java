@@ -15,6 +15,7 @@ import java.util.Map;
 public class ASMUtil {
 
     private static final Map<String, String> TYPE_CONVERSION = new HashMap<>();
+    public static final Map<String, String> REVERSE_TYPE_CONVERSION = new HashMap<>();
 
     private static final List<String> IGNORED = Arrays.asList(
             "valueOf",
@@ -101,6 +102,16 @@ public class ASMUtil {
         TYPE_CONVERSION.put("long", "J");
         TYPE_CONVERSION.put("float", "F");
         TYPE_CONVERSION.put("double", "D");
+
+        REVERSE_TYPE_CONVERSION.put("V", "void");
+        REVERSE_TYPE_CONVERSION.put("Z", "boolean");
+        REVERSE_TYPE_CONVERSION.put("B", "byte");
+        REVERSE_TYPE_CONVERSION.put("C", "char");
+        REVERSE_TYPE_CONVERSION.put("S", "short");
+        REVERSE_TYPE_CONVERSION.put("I", "int");
+        REVERSE_TYPE_CONVERSION.put("J", "long");
+        REVERSE_TYPE_CONVERSION.put("F", "float");
+        REVERSE_TYPE_CONVERSION.put("D", "double");
 
     }
 

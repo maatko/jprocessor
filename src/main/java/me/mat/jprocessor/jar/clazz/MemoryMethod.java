@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import me.mat.jprocessor.util.asm.ASMUtil;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.lang.reflect.Modifier;

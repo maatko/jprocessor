@@ -7,6 +7,8 @@ import me.mat.jprocessor.jar.clazz.MemoryMethod;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.mappings.mapping.FieldMapping;
 import me.mat.jprocessor.mappings.mapping.MethodMapping;
+import me.mat.jprocessor.util.asm.ASMUtil;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.commons.MethodRemapper;
 import org.objectweb.asm.commons.Remapper;
@@ -21,6 +23,22 @@ public class JMethodRemapper extends MethodRemapper {
         super(api, methodVisitor, remapper);
         this.memoryJar = memoryJar;
     }
+
+    /*
+        @Override
+        public void visitLocalVariable(String name, String descriptor, String signature, Label start, Label end, int index) {
+            String mappedDescriptor = this.remapper.mapDesc(descriptor);
+            StringBuilder builder = new StringBuilder();
+            if (mappedDescriptor.contains("/")) {
+                String newName = mappedDescriptor.substring(mappedDescriptor.lastIndexOf("/") + 1);
+                newName = newName.substring(0, newName.length() - 1);
+                builder.append("var").append(newName);
+            } else {
+                builder.append(ASMUtil.REVERSE_TYPE_CONVERSION.getOrDefault(descriptor, "null")).append("Var");
+            }
+            super.visitLocalVariable(builder.toString(), mappedDescriptor, this.remapper.mapSignature(signature, true), start, end, index);
+        }
+    */
 
     @Override
     public void visitMethodInsn(int opcodeAndSource, String owner, String name, String descriptor, boolean isInterface) {

@@ -193,7 +193,21 @@ public class MemoryClass {
      */
 
     public void transform(MethodTransformer methodTransformer) {
-        methods.forEach(memoryMethod -> methodTransformer.transform(this, memoryMethod));
+        // loop through all the methods
+        methods.forEach(memoryMethod -> {
+            // transform the method
+            methodTransformer.transform(this, memoryMethod);
+
+            // get the list of instructions
+            MemoryInstructions instructions = memoryMethod.instructions;
+
+            // loop through all the instructions
+            for (int i = 0; i < instructions.size(); i++) {
+
+                // and transform each instruction
+                methodTransformer.transform(this, memoryMethod, instructions, instructions.get(i));
+            }
+        });
     }
 
     /**

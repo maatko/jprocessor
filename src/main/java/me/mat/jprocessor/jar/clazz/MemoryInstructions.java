@@ -240,6 +240,48 @@ public class MemoryInstructions {
     }
 
     /**
+     * Gets the first instruction in the list
+     *
+     * @return {@link AbstractInsnNode}
+     */
+
+    public AbstractInsnNode getFirst() {
+        return instructions.getFirst();
+    }
+
+    /**
+     * Gets an instruction from the list
+     * based on the provided index
+     *
+     * @param index index of the instruction that you want to get
+     * @return {@link AbstractInsnNode}
+     */
+
+    public AbstractInsnNode get(int index) {
+        return instructions.get(index);
+    }
+
+    /**
+     * Gets the last instruction in the list
+     *
+     * @return {@link AbstractInsnNode}
+     */
+
+    public AbstractInsnNode getLast() {
+        return instructions.getLast();
+    }
+
+    /**
+     * Returns the size of the instructions list
+     *
+     * @return {@link Integer}
+     */
+
+    public int size() {
+        return instructions.size();
+    }
+
+    /**
      * Creates an invoke instruction for the provided method
      *
      * @param memoryMethod method that you want to create the instruction for
