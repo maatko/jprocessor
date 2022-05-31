@@ -92,9 +92,6 @@ public abstract class MappingGenerator {
      */
 
     void generateClass(String className, MemoryJar memoryJar, MemoryClass memoryClass) {
-        // flag that checks if the class is an annotation
-        boolean isAnnotation = memoryClass.isAnnotation();
-
         // check that the current class is not a main class
         if (!memoryClass.isMainClass) {
             // create a string builder that will hold the mapping
@@ -154,13 +151,6 @@ public abstract class MappingGenerator {
                         description.substring(description.indexOf(")") + 1),
                         description
                 );
-
-                // if this is an annotation method
-                if (isAnnotation) {
-
-                    // map the annotations for the current method
-                    mapAnnotations(memoryJar, memoryClass, memoryMethod, mapping);
-                }
             }
         });
     }
@@ -196,61 +186,6 @@ public abstract class MappingGenerator {
                 );
             }
         });
-    }
-
-    /**
-     * Maps the annotation in all the loaded
-     * classes in the jar
-     *
-     * @param memoryJar    handle of the current MemoryJar
-     * @param parentClass  class of the annotation that it will be checked for
-     * @param memoryMethod target method of the annotation
-     * @param mapping      mapping that was generated for the provided method
-     */
-
-    void mapAnnotations(MemoryJar memoryJar, MemoryClass parentClass, MemoryMethod memoryMethod, String mapping) {
-        memoryJar.getClasses().forEach((className, memoryClass) -> {
-            if (!parentClass.equals(memoryClass)) {
-                mapAnnotation(memoryClass.getVisibleAnnotations(), memoryMethod, mapping);
-                mapAnnotation(memoryClass.getInvisibleAnnotations(), memoryMethod, mapping);
-
-                memoryClass.fields.forEach(memoryField -> {
-                    mapAnnotation(memoryField.getVisibleAnnotations(), memoryMethod, mapping);
-                    mapAnnotation(memoryField.getInvisibleAnnotations(), memoryMethod, mapping);
-                });
-                memoryClass.methods.forEach(method -> {
-                    mapAnnotation(method.getVisibleAnnotations(), memoryMethod, mapping);
-                    mapAnnotation(method.getInvisibleAnnotations(), memoryMethod, mapping);
-                });
-            }
-        });
-    }
-
-    /**
-     * Maps annotations for the current method mapping
-     *
-     * @param annotations  list of annotations that you want to check
-     * @param memoryMethod target method of the annotation
-     * @param mapping      mapping that was generated for the provided method
-     */
-
-    void mapAnnotation(List<AnnotationNode> annotations, MemoryMethod memoryMethod, String mapping) {
-        if (annotations != null) {
-            for (AnnotationNode annotationNode : annotations) {
-                int targetIndex = -1;
-                List<Object> values = annotationNode.values;
-                if (values != null) {
-                    for (int i = 0; i < values.size(); i++) {
-                        if (values.get(i).equals(memoryMethod.name())) {
-                            targetIndex = i;
-                        }
-                    }
-                    if (targetIndex != -1) {
-                        annotationNode.values.set(targetIndex, mapping);
-                    }
-                }
-            }
-        }
     }
 
 }

@@ -13,6 +13,7 @@ import me.mat.jprocessor.mappings.mapping.FieldMapping;
 import me.mat.jprocessor.mappings.mapping.Mapping;
 import me.mat.jprocessor.mappings.mapping.MethodMapping;
 import me.mat.jprocessor.mappings.mapping.processor.MappingProcessor;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.SimpleRemapper;
 
 import java.io.*;
@@ -353,6 +354,33 @@ public class MappingManager extends SimpleRemapper {
     @Override
     public String mapRecordComponentName(String owner, String name, String descriptor) {
         return mapFieldName(owner, name, descriptor);
+    }
+
+    @Override
+    public String mapAnnotationAttributeName(String descriptor, String name) {
+        // get all the mappings for the current type
+        List<MethodMapping> mappings = getMethodMappings().getOrDefault(
+                Type.getType(descriptor).getInternalName(),
+                null
+        );
+
+        // if the mappings were found
+        if (mappings != null) {
+
+            // loop through the mappings
+            for (MethodMapping mapping : mappings) {
+
+                // if the mapping matches the name
+                if (unMapping ? mapping.mapping.equals(name) : mapping.name.equals(name)) {
+
+                    // return the mapping
+                    return unMapping ? mapping.name : mapping.mapping;
+                }
+            }
+        }
+
+        // else just attempt to map it regularly
+        return super.mapAnnotationAttributeName(descriptor, name);
     }
 
     @Override

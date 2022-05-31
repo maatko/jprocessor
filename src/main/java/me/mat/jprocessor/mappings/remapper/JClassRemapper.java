@@ -2,6 +2,7 @@ package me.mat.jprocessor.mappings.remapper;
 
 import me.mat.jprocessor.jar.MemoryJar;
 import me.mat.jprocessor.mappings.MappingManager;
+import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.commons.ClassRemapper;
