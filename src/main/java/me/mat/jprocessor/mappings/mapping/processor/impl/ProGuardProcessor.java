@@ -1,6 +1,5 @@
 package me.mat.jprocessor.mappings.mapping.processor.impl;
 
-import jdk.internal.org.objectweb.asm.Type;
 import me.mat.jprocessor.jar.clazz.MemoryClass;
 import me.mat.jprocessor.jar.clazz.MemoryMethod;
 import me.mat.jprocessor.mappings.MappingManager;
@@ -9,6 +8,7 @@ import me.mat.jprocessor.mappings.mapping.Mapping;
 import me.mat.jprocessor.mappings.mapping.MethodMapping;
 import me.mat.jprocessor.mappings.mapping.processor.MappingProcessor;
 import me.mat.jprocessor.util.asm.ASMUtil;
+import org.objectweb.asm.Type;
 
 import java.util.HashMap;
 import java.util.List;
