@@ -36,6 +36,11 @@ public class JProcessTest {
     private static final File CLIENT_OUT_JAR_FILE = new File(TESTS_DIRECTORY, "client_out.jar");
 
     @Test
+    public void testResources() throws IOException {
+
+    }
+
+    @Test
     public void deObfuscate() throws FileNotFoundException, MappingLoadException {
         // if the test directory does not exist create it
         assert TESTS_DIRECTORY.exists() || TESTS_DIRECTORY.mkdirs();

@@ -3,6 +3,7 @@ package me.mat.jprocessor.util;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import me.mat.jprocessor.jar.MemoryResource;
+import me.mat.jprocessor.jar.clazz.MemoryClass;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
 
@@ -25,10 +26,29 @@ public class JarUtil {
 
     private static final String CLASS_SUFFIX = ".class";
 
+    public static MemoryClass load(Class<?> aClass) {
+        InputStream inputStream = ResourceUtil.getClassResource(aClass);
+        if (inputStream == null) {
+            throw new RuntimeException("Invalid Class Resource: " + aClass.getName());
+        }
+        byte[] data;
+        try {
+            data = read(inputStream);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        ClassNode classNode = getClassNode(data);
+        if (classNode == null) {
+            throw new RuntimeException("Failed to load the ClassNode: " + aClass.getName());
+        }
+        return new MemoryClass(classNode);
+    }
+
     /**
      * Returns the main class of the application
      *
      * @param file jar file that you want to retrive the main class for
+     *
      * @return {@link String}
      */
 
@@ -47,6 +67,7 @@ public class JarUtil {
      * Returns the Manifest of the provided jar file
      *
      * @param file file that you want to get the manifest for
+     *
      * @return {@link Manifest}
      */
 
@@ -109,6 +130,7 @@ public class JarUtil {
      * Loads all the jar classes
      *
      * @param jar jar that you want to load
+     *
      * @return {@link Stream<ClassNode>}
      */
 
@@ -117,42 +139,12 @@ public class JarUtil {
     }
 
     /**
-     * Reads a class node from the provided data
-     *
-     * @param data data that you want to read into the class node
-     * @return {@link ClassNode}
-     */
-
-    public static ClassNode getClassNode(byte[] data) {
-        // read the first 4 bytes of the array
-        String cafeBabe = String.format("%02X%02X%02X%02X", data[0], data[1], data[2], data[3]);
-
-        // check that the string that was read is equal to the cafe babe
-        if (cafeBabe.equalsIgnoreCase("cafeBabe")) {
-
-            // create the class reader from the input stream
-            ClassReader classReader = new ClassReader(data);
-
-            // create a new class node
-            ClassNode classNode = new ClassNode();
-
-            // write the bytes of the class to the class node
-            classReader.accept(classNode, 0);
-
-            // return the class node
-            return classNode;
-        }
-
-        // else just return null
-        return null;
-    }
-
-    /**
      * Load's the jar into memory and
      * returns a stream of loaded classes
      *
      * @param jar       that you want to load
      * @param predicate that you want to match for the class name
+     *
      * @return {@link Stream<byte> }
      */
 
@@ -195,10 +187,44 @@ public class JarUtil {
     }
 
     /**
+     * Reads a class node from the provided data
+     *
+     * @param data data that you want to read into the class node
+     *
+     * @return {@link ClassNode}
+     */
+
+    public static ClassNode getClassNode(byte[] data) {
+        // read the first 4 bytes of the array
+        String cafeBabe = String.format("%02X%02X%02X%02X", data[0], data[1], data[2], data[3]);
+
+        // check that the string that was read is equal to the cafe babe
+        if (cafeBabe.equalsIgnoreCase("cafeBabe")) {
+
+            // create the class reader from the input stream
+            ClassReader classReader = new ClassReader(data);
+
+            // create a new class node
+            ClassNode classNode = new ClassNode();
+
+            // write the bytes of the class to the class node
+            classReader.accept(classNode, 0);
+
+            // return the class node
+            return classNode;
+        }
+
+        // else just return null
+        return null;
+    }
+
+    /**
      * Reads a byte[] from an input stream
      *
      * @param in the input stream
+     *
      * @return byte[] of the input stream
+     *
      * @throws IOException
      */
 
