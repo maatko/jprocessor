@@ -272,7 +272,8 @@ public class MemoryJar {
         JProcessor.Logging.info("Saving the jar from memory to '%s'", file.getAbsolutePath());
 
         // create the jar output stream
-        try (JarOutputStream out = new JarOutputStream(Files.newOutputStream(file.toPath()), manifest.getManifest())) {
+        try (JarOutputStream out = (manifest == null ? new JarOutputStream(Files.newOutputStream(file.toPath()))
+                : new JarOutputStream(Files.newOutputStream(file.toPath()), manifest.getManifest()))) {
 
             // alert the user that classes are being written
             JProcessor.Logging.info("Writing %d classes...", classes.size());
