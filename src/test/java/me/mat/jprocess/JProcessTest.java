@@ -2,10 +2,10 @@ package me.mat.jprocess;
 
 import me.mat.jprocess.util.Manifest;
 import me.mat.jprocessor.JProcessor;
-import me.mat.jprocessor.jar.MemoryJar;
-import me.mat.jprocessor.jar.clazz.MemoryClass;
-import me.mat.jprocessor.jar.clazz.MemoryField;
-import me.mat.jprocessor.jar.clazz.MemoryMethod;
+import me.mat.jprocessor.jar.memory.MemoryJar;
+import me.mat.jprocessor.jar.memory.MemoryClass;
+import me.mat.jprocessor.jar.memory.MemoryField;
+import me.mat.jprocessor.jar.memory.MemoryMethod;
 import me.mat.jprocessor.mappings.MappingLoadException;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.mappings.MappingType;

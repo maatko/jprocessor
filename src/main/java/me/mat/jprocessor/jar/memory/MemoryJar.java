@@ -1,9 +1,7 @@
-package me.mat.jprocessor.jar;
+package me.mat.jprocessor.jar.memory;
 
 import lombok.Getter;
 import me.mat.jprocessor.JProcessor;
-import me.mat.jprocessor.jar.clazz.MemoryClass;
-import me.mat.jprocessor.jar.clazz.MemoryManifest;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.transformer.ClassTransformer;
 import me.mat.jprocessor.transformer.FieldTransformer;
@@ -28,7 +26,7 @@ public class MemoryJar {
 
     private MemoryManifest manifest;
 
-    public MemoryJar(Map<String, byte[]> classData, String mainClass) {
+    public MemoryJar(Map<String, byte[]> classData, Map<String, byte[]> resourceData, String mainClass) {
         // log to console that the jar's classes are loading into the memory
         JProcessor.Logging.info("Loading from provided memory");
 
@@ -52,6 +50,9 @@ public class MemoryJar {
                 System.err.println("[!] Invalid class '" + className + "'");
             }
         });
+
+        // loop through all the resources and load them into the memory
+        resourceData.forEach((path, bytes) -> resources.put(path, new MemoryResource(bytes)));
 
         // attempt to fix broken inner classes
         classes.forEach((className, memoryClass) -> {
@@ -262,28 +263,30 @@ public class MemoryJar {
      * Saves the jar from memory
      * to a file on the disk
      *
-     * @param file    file that you want to save to
-     * @param comment comment on the output jar file
+     * @param file   file that you want to save to
+     * @param filter checks and makes sure that every class starts with the filter
      */
 
-    public void save(File file, String comment) {
+    public void save(File file, String filter) {
         // log to console that the jar from memory is being saved to a file
         JProcessor.Logging.info("Saving the jar from memory to '%s'", file.getAbsolutePath());
 
         // create the jar output stream
         try (JarOutputStream out = new JarOutputStream(Files.newOutputStream(file.toPath()), manifest.getManifest())) {
 
-            // if the comment is provided
-            if (comment != null) {
-                // set the jar comment
-                out.setComment(comment);
-            }
-
             // alert the user that classes are being written
             JProcessor.Logging.info("Writing %d classes...", classes.size());
 
             // loop through all the class nodes and write them to the stream
-            classes.forEach((name, memoryClass) -> memoryClass.write(this, out));
+            classes.forEach((name, memoryClass) -> {
+                if (filter != null) {
+                    if (name.startsWith(filter)) {
+                        memoryClass.write(this, out);
+                    }
+                } else {
+                    memoryClass.write(this, out);
+                }
+            });
 
             // alert the user that classes are finished writing
             JProcessor.Logging.info("Finished writing classes");

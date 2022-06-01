@@ -1,4 +1,4 @@
-package me.mat.jprocessor.jar.clazz;
+package me.mat.jprocessor.jar.memory;
 
 import lombok.NonNull;
 import org.objectweb.asm.tree.AnnotationNode;

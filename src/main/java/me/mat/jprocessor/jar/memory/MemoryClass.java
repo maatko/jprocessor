@@ -1,8 +1,7 @@
-package me.mat.jprocessor.jar.clazz;
+package me.mat.jprocessor.jar.memory;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import me.mat.jprocessor.jar.MemoryJar;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.mappings.remapper.JClassRemapper;
 import me.mat.jprocessor.transformer.ClassTransformer;

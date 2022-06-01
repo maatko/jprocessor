@@ -6,7 +6,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import lombok.Getter;
 import me.mat.jprocessor.JProcessor;
-import me.mat.jprocessor.jar.MemoryJar;
+import me.mat.jprocessor.jar.memory.MemoryJar;
 import me.mat.jprocessor.mappings.generation.MappingGenerateException;
 import me.mat.jprocessor.mappings.generation.generator.MappingGenerator;
 import me.mat.jprocessor.mappings.mapping.FieldMapping;

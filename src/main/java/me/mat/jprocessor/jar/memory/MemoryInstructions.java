@@ -1,4 +1,4 @@
-package me.mat.jprocessor.jar.clazz;
+package me.mat.jprocessor.jar.memory;
 
 import lombok.RequiredArgsConstructor;
 import org.objectweb.asm.Opcodes;

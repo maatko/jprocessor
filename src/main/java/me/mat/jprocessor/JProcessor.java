@@ -2,7 +2,7 @@ package me.mat.jprocessor;
 
 import lombok.Setter;
 import me.mat.jprocessor.jar.JarLoadCallback;
-import me.mat.jprocessor.jar.MemoryJar;
+import me.mat.jprocessor.jar.memory.MemoryJar;
 import me.mat.jprocessor.mappings.MappingLoadCallback;
 import me.mat.jprocessor.mappings.MappingLoadException;
 import me.mat.jprocessor.mappings.MappingManager;
@@ -29,12 +29,13 @@ public class JProcessor {
         /**
          * Loads a memory jar from the provided classes
          *
-         * @param classes classes that you want to load
+         * @param classes   classes that you want to load
+         * @param resources resources that you want to load
          * @return {@link MemoryJar}
          */
 
-        public static MemoryJar load(Map<String, byte[]> classes, String mainClass) {
-            return new MemoryJar(classes, mainClass);
+        public static MemoryJar load(Map<String, byte[]> classes, Map<String, byte[]> resources, String mainClass) {
+            return new MemoryJar(classes, resources, mainClass);
         }
 
         /**
@@ -43,8 +44,8 @@ public class JProcessor {
          * @param classes classes that you want to load
          */
 
-        public static void load(Map<String, byte[]> classes, String mainClass, JarLoadCallback callback) {
-            EXECUTOR_SERVICE.submit(() -> callback.onLoad(load(classes, mainClass)));
+        public static void load(Map<String, byte[]> classes, Map<String, byte[]> resources, String mainClass, JarLoadCallback callback) {
+            EXECUTOR_SERVICE.submit(() -> callback.onLoad(load(classes, resources, mainClass)));
         }
 
         /**

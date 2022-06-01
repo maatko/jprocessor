@@ -1,7 +1,7 @@
 package me.mat.jprocessor.transformer;
 
-import me.mat.jprocessor.jar.clazz.MemoryClass;
-import me.mat.jprocessor.jar.clazz.MemoryField;
+import me.mat.jprocessor.jar.memory.MemoryClass;
+import me.mat.jprocessor.jar.memory.MemoryField;
 
 public interface FieldTransformer {
 

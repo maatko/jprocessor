@@ -1,4 +1,4 @@
-package me.mat.jprocessor.jar;
+package me.mat.jprocessor.jar.memory;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

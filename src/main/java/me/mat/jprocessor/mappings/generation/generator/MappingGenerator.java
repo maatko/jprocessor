@@ -1,11 +1,11 @@
 package me.mat.jprocessor.mappings.generation.generator;
 
 import lombok.Setter;
-import me.mat.jprocessor.jar.MemoryJar;
-import me.mat.jprocessor.jar.clazz.MemoryClass;
-import me.mat.jprocessor.jar.clazz.MemoryField;
-import me.mat.jprocessor.jar.clazz.MemoryLocalVariable;
-import me.mat.jprocessor.jar.clazz.MemoryMethod;
+import me.mat.jprocessor.jar.memory.MemoryJar;
+import me.mat.jprocessor.jar.memory.MemoryClass;
+import me.mat.jprocessor.jar.memory.MemoryField;
+import me.mat.jprocessor.jar.memory.MemoryLocalVariable;
+import me.mat.jprocessor.jar.memory.MemoryMethod;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.mappings.mapping.Mapping;
 import me.mat.jprocessor.mappings.mapping.MethodMapping;

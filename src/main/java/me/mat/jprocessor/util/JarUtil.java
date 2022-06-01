@@ -2,8 +2,8 @@ package me.mat.jprocessor.util;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import me.mat.jprocessor.jar.MemoryResource;
-import me.mat.jprocessor.jar.clazz.MemoryClass;
+import me.mat.jprocessor.jar.memory.MemoryResource;
+import me.mat.jprocessor.jar.memory.MemoryClass;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
 

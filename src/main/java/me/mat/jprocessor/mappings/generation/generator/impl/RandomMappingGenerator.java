@@ -1,9 +1,9 @@
 package me.mat.jprocessor.mappings.generation.generator.impl;
 
-import me.mat.jprocessor.jar.clazz.MemoryClass;
-import me.mat.jprocessor.jar.clazz.MemoryField;
-import me.mat.jprocessor.jar.clazz.MemoryLocalVariable;
-import me.mat.jprocessor.jar.clazz.MemoryMethod;
+import me.mat.jprocessor.jar.memory.MemoryClass;
+import me.mat.jprocessor.jar.memory.MemoryField;
+import me.mat.jprocessor.jar.memory.MemoryLocalVariable;
+import me.mat.jprocessor.jar.memory.MemoryMethod;
 import me.mat.jprocessor.mappings.generation.generator.MappingGenerator;
 
 import java.util.ArrayList;

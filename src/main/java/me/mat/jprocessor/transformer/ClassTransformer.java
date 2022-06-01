@@ -1,9 +1,9 @@
 package me.mat.jprocessor.transformer;
 
-import me.mat.jprocessor.jar.clazz.MemoryClass;
-import me.mat.jprocessor.jar.clazz.MemoryField;
-import me.mat.jprocessor.jar.clazz.MemoryInstructions;
-import me.mat.jprocessor.jar.clazz.MemoryMethod;
+import me.mat.jprocessor.jar.memory.MemoryClass;
+import me.mat.jprocessor.jar.memory.MemoryField;
+import me.mat.jprocessor.jar.memory.MemoryInstructions;
+import me.mat.jprocessor.jar.memory.MemoryMethod;
 import org.objectweb.asm.tree.AbstractInsnNode;
 
 public interface ClassTransformer extends FieldTransformer, MethodTransformer {

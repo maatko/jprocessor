@@ -1,6 +1,6 @@
 package me.mat.jprocessor.util.asm;
 
-import me.mat.jprocessor.jar.MemoryJar;
+import me.mat.jprocessor.jar.memory.MemoryJar;
 import org.objectweb.asm.ClassWriter;
 
 public class CustomClassWriter extends ClassWriter {

@@ -1,7 +1,7 @@
 package me.mat.jprocessor.mappings.mapping.processor.impl;
 
-import me.mat.jprocessor.jar.clazz.MemoryClass;
-import me.mat.jprocessor.jar.clazz.MemoryMethod;
+import me.mat.jprocessor.jar.memory.MemoryClass;
+import me.mat.jprocessor.jar.memory.MemoryMethod;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.mappings.mapping.FieldMapping;
 import me.mat.jprocessor.mappings.mapping.Mapping;
