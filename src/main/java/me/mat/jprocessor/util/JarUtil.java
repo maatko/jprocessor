@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -23,25 +22,6 @@ import java.util.stream.Stream;
 public class JarUtil {
 
     private static final String CLASS_SUFFIX = ".class";
-
-    /**
-     * Returns the main class of the application
-     *
-     * @param file jar file that you want to retrieve the main class for
-     * @return {@link String}
-     */
-
-    public static String getMainClass(File file) {
-        Manifest manifest = getManifest(file);
-        if (manifest == null) {
-            return null;
-        }
-        Attributes attributes = manifest.getMainAttributes();
-        if (!attributes.containsKey("Main-Class")) {
-            return null;
-        }
-        return attributes.getValue("Main-Class");
-    }
 
     /**
      * Returns the Manifest of the provided jar file
@@ -240,7 +220,6 @@ public class JarUtil {
      *
      * @param in the input stream
      * @return byte[] of the input stream
-     * @throws IOException
      */
 
     public static byte[] read(InputStream in) throws IOException {
