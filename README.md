@@ -1,4 +1,5 @@
 [![Release](https://jitpack.io/v/Mat1337/jprocessor.svg)](https://jitpack.io/Mat1337/jprocessor)
+[![license](https://img.shields.io/github/license/mashape/apistatus.svg)](LICENSE)
 
 # jprocessor
 Library that makes working with ASM and classes easier
