@@ -8,6 +8,13 @@ import java.io.InputStream;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ResourceUtil {
 
+    /**
+     * Gets the provided class from the resources
+     *
+     * @param aClass class that you want to get
+     * @return {@link InputStream}
+     */
+
     public static InputStream getClassResource(Class<?> aClass) {
         return getResource("/" + aClass.getName().replaceAll("\\.", "/") + ".class");
     }
@@ -16,7 +23,6 @@ public class ResourceUtil {
      * Gets a resource from the provided path
      *
      * @param path path of the resource
-     *
      * @return {@link InputStream}
      */
 

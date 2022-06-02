@@ -51,12 +51,42 @@ public class JProcessor {
         /**
          * Loads a jar into the memory from the provided path
          *
+         * @param path      path to the jar file
+         * @param mainClass main class of the jar
+         * @return {@link MemoryJar}
+         */
+
+        public static MemoryJar load(String path, String mainClass) throws FileNotFoundException {
+            return load(new File(path), mainClass);
+        }
+
+        /**
+         * Loads a jar into the memory from the provided path
+         *
          * @param path path to the jar file
          * @return {@link MemoryJar}
          */
 
         public static MemoryJar load(String path) throws FileNotFoundException {
             return load(new File(path));
+        }
+
+        /**
+         * Loads a jar into the memory asynchronously from the provided file
+         *
+         * @param path      path to the jar file
+         * @param mainClass main class of the jar
+         * @param callback  callback of the load action
+         */
+
+        public static void load(String path, String mainClass, JarLoadCallback callback) {
+            EXECUTOR_SERVICE.submit(() -> {
+                try {
+                    callback.onLoad(load(path, mainClass));
+                } catch (FileNotFoundException e) {
+                    callback.onFail(e.getMessage());
+                }
+            });
         }
 
         /**
@@ -79,6 +109,21 @@ public class JProcessor {
         /**
          * Loads a jar into the memory from the provided file
          *
+         * @param file      file handle of the jar
+         * @param mainClass main class of the jar
+         * @return {@link MemoryJar}
+         */
+
+        public static MemoryJar load(File file, String mainClass) throws FileNotFoundException {
+            if (!file.exists()) {
+                throw new FileNotFoundException("File '" + file.getAbsolutePath() + "' does not exist");
+            }
+            return new MemoryJar(file, mainClass);
+        }
+
+        /**
+         * Loads a jar into the memory from the provided file
+         *
          * @param file file handle of the jar
          * @return {@link MemoryJar}
          */
@@ -87,7 +132,25 @@ public class JProcessor {
             if (!file.exists()) {
                 throw new FileNotFoundException("File '" + file.getAbsolutePath() + "' does not exist");
             }
-            return new MemoryJar(file);
+            return new MemoryJar(file, null);
+        }
+
+        /**
+         * Loads a jar into the memory asynchronously from the provided file
+         *
+         * @param file      file handle of the jar
+         * @param mainClass main class of the jar
+         * @param callback  callback of the load action
+         */
+
+        public static void load(File file, String mainClass, JarLoadCallback callback) {
+            EXECUTOR_SERVICE.submit(() -> {
+                try {
+                    callback.onLoad(load(file, mainClass));
+                } catch (FileNotFoundException e) {
+                    callback.onFail(e.getMessage());
+                }
+            });
         }
 
         /**
@@ -191,8 +254,6 @@ public class JProcessor {
          * @param memoryJar   jar that has been loaded in memory
          * @param file        file that the mappings are contained in
          * @param mappingType type of the mappings that the file is saved in
-         * @return {@link MappingManager}
-         * @throws MappingLoadException
          */
 
         public static void load(MemoryJar memoryJar, File file, MappingType mappingType, MappingLoadCallback callback) {

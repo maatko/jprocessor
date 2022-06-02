@@ -16,8 +16,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class ProGuardProcessor implements MappingProcessor {
 
-    private final Map<MemoryMethod, Map<String, Integer>> localVariableCounters = new HashMap<>();
-
     private static final String TAB = "    ";
     private static final String DELIMITER = " -> ";
 
@@ -90,8 +88,15 @@ public class ProGuardProcessor implements MappingProcessor {
             AtomicReference<Integer> counter = new AtomicReference<>(0);
 
             // loop through all the local variables and generate the variable names
-            memoryMethod.localVariables.forEach(localVariable
-                    -> localVariable.setName("var" + counter.getAndSet(counter.get() + 1)));
+            memoryMethod.localVariables.forEach(localVariable -> {
+
+                // if the local variable name is not a this
+                if (!localVariable.name().equals("this")) {
+
+                    // generate a new name
+                    localVariable.setName("var" + counter.getAndSet(counter.get() + 1));
+                }
+            });
         });
     }
 

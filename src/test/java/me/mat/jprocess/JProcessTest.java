@@ -2,9 +2,9 @@ package me.mat.jprocess;
 
 import me.mat.jprocess.util.Manifest;
 import me.mat.jprocessor.JProcessor;
-import me.mat.jprocessor.jar.memory.MemoryJar;
 import me.mat.jprocessor.jar.memory.MemoryClass;
 import me.mat.jprocessor.jar.memory.MemoryField;
+import me.mat.jprocessor.jar.memory.MemoryJar;
 import me.mat.jprocessor.jar.memory.MemoryMethod;
 import me.mat.jprocessor.mappings.MappingLoadException;
 import me.mat.jprocessor.mappings.MappingManager;
@@ -34,11 +34,6 @@ public class JProcessTest {
     private static final File MAPPINGS_TESTS_OUT_FILE = new File(TESTS_DIRECTORY, "tests_mappings_out.json");
     private static final File CLIENT_JAR_FILE = new File(TESTS_DIRECTORY, "client.jar");
     private static final File CLIENT_OUT_JAR_FILE = new File(TESTS_DIRECTORY, "client_out.jar");
-
-    @Test
-    public void testResources() throws IOException {
-
-    }
 
     @Test
     public void deObfuscate() throws FileNotFoundException, MappingLoadException {

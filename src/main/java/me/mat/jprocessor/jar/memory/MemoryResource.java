@@ -1,5 +1,6 @@
 package me.mat.jprocessor.jar.memory;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -10,6 +11,7 @@ import java.util.jar.JarOutputStream;
 @RequiredArgsConstructor
 public class MemoryResource {
 
+    @Getter
     @NonNull
     private byte[] data;
 

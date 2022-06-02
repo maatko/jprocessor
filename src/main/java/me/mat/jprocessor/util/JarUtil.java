@@ -2,8 +2,8 @@ package me.mat.jprocessor.util;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import me.mat.jprocessor.jar.memory.MemoryResource;
 import me.mat.jprocessor.jar.memory.MemoryClass;
+import me.mat.jprocessor.jar.memory.MemoryResource;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
 
@@ -11,11 +11,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
+import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -26,57 +24,79 @@ public class JarUtil {
 
     private static final String CLASS_SUFFIX = ".class";
 
-    public static MemoryClass load(Class<?> aClass) {
-        InputStream inputStream = ResourceUtil.getClassResource(aClass);
-        if (inputStream == null) {
-            throw new RuntimeException("Invalid Class Resource: " + aClass.getName());
-        }
-        byte[] data;
-        try {
-            data = read(inputStream);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        ClassNode classNode = getClassNode(data);
-        if (classNode == null) {
-            throw new RuntimeException("Failed to load the ClassNode: " + aClass.getName());
-        }
-        return new MemoryClass(classNode);
-    }
-
     /**
      * Returns the main class of the application
      *
-     * @param file jar file that you want to retrive the main class for
-     *
+     * @param file jar file that you want to retrieve the main class for
      * @return {@link String}
      */
 
     public static String getMainClass(File file) {
-        try (JarFile jarFile = new JarFile(file)) {
-            if (jarFile.getManifest().getMainAttributes().getValue("Main-Class") == null) {
-                return "";
-            }
-            return jarFile.getManifest().getMainAttributes().getValue("Main-Class");
-        } catch (Exception e) {
-            return "";
+        Manifest manifest = getManifest(file);
+        if (manifest == null) {
+            return null;
         }
+        Attributes attributes = manifest.getMainAttributes();
+        if (!attributes.containsKey("Main-Class")) {
+            return null;
+        }
+        return attributes.getValue("Main-Class");
     }
 
     /**
      * Returns the Manifest of the provided jar file
      *
      * @param file file that you want to get the manifest for
-     *
      * @return {@link Manifest}
      */
 
-    public static Manifest getManifest(File file) throws IOException {
+    public static Manifest getManifest(File file) {
         try (JarFile jarFile = new JarFile(file)) {
             return jarFile.getManifest();
         } catch (Exception e) {
-            throw new IOException(e);
+            return null;
         }
+    }
+
+    /**
+     * Loads a class into memory
+     *
+     * @param aClass class that you want to load
+     * @return {@link MemoryClass}
+     */
+
+    public static MemoryClass load(Class<?> aClass) {
+        // get the class input stream from the resources
+        InputStream inputStream = ResourceUtil.getClassResource(aClass);
+        if (inputStream == null) {
+            throw new RuntimeException("Invalid Class Resource: " + aClass.getName());
+        }
+
+        // read the data from the class
+        byte[] data;
+        try {
+            data = read(inputStream);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // load the class node
+        ClassNode classNode = getClassNode(data);
+        if (classNode == null) {
+            throw new RuntimeException("Failed to load the ClassNode: " + aClass.getName());
+        }
+
+        // define a new memory class
+        MemoryClass memoryClass = new MemoryClass(classNode);
+
+        // initialize the class
+        memoryClass.initialize(new HashMap<>());
+
+        // build the class hierarchy
+        memoryClass.buildHierarchy();
+
+        // return the class
+        return memoryClass;
     }
 
     /**
@@ -130,7 +150,6 @@ public class JarUtil {
      * Loads all the jar classes
      *
      * @param jar jar that you want to load
-     *
      * @return {@link Stream<ClassNode>}
      */
 
@@ -144,7 +163,6 @@ public class JarUtil {
      *
      * @param jar       that you want to load
      * @param predicate that you want to match for the class name
-     *
      * @return {@link Stream<byte> }
      */
 
@@ -190,7 +208,6 @@ public class JarUtil {
      * Reads a class node from the provided data
      *
      * @param data data that you want to read into the class node
-     *
      * @return {@link ClassNode}
      */
 
@@ -222,9 +239,7 @@ public class JarUtil {
      * Reads a byte[] from an input stream
      *
      * @param in the input stream
-     *
      * @return byte[] of the input stream
-     *
      * @throws IOException
      */
 

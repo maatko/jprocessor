@@ -87,7 +87,7 @@ public class MemoryJar {
         }
     }
 
-    public MemoryJar(File file) {
+    public MemoryJar(File file, String mainClass) {
         // log to console that the jar's classes are loading into the memory
         JProcessor.Logging.info("Loading '%s' into memory", file.getName());
 
@@ -128,11 +128,23 @@ public class MemoryJar {
         // log to console how many resources were loaded into memory
         JProcessor.Logging.info("Loaded '%d' resources into memory", resources.size());
 
-        // get the main class of the jar
-        String mainClass = JarUtil.getMainClass(file).replaceAll("\\.", "/");
-        if (classes.containsKey(mainClass)) {
+        // if the main class was not provided
+        if (mainClass == null) {
+
+            // attempt to get the main class from the manifest
+            mainClass = manifest.mainClass;
+        }
+
+        // if the main class was provided and the classes pool contains the main class
+        if (mainClass != null && classes.containsKey(mainClass)) {
+
+            // get the main class and update its is main class flag to true
             classes.get(mainClass).isMainClass = true;
         }
+    }
+
+    public MemoryJar(File file) {
+        this(file, null);
     }
 
     /**
@@ -243,12 +255,13 @@ public class MemoryJar {
     }
 
     /**
-     * Exports all the classes to a map
+     * Gets all the data from the classes
+     * and stores them into a hash map
      *
      * @return {@link Map}
      */
 
-    public Map<String, byte[]> exportClasses() {
+    public Map<String, byte[]> getClassData() {
         // create a new map that will hold all the data
         Map<String, byte[]> data = new HashMap<>();
 
@@ -260,14 +273,32 @@ public class MemoryJar {
     }
 
     /**
+     * Gets all the data from the resources
+     * and stores them into a hash map
+     *
+     * @return {@link Map}
+     */
+
+    public Map<String, byte[]> getResourceData() {
+        // create a new map that will hold all the data
+        Map<String, byte[]> data = new HashMap<>();
+
+        // loop through all the resources and load them into the data map
+        resources.forEach((name, memoryResource) -> data.put(name, memoryResource.getData()));
+
+        // return the data
+        return data;
+    }
+
+    /**
      * Saves the jar from memory
      * to a file on the disk
      *
-     * @param file   file that you want to save to
-     * @param filter checks and makes sure that every class starts with the filter
+     * @param file    file that you want to save to
+     * @param filters checks and makes sure that every class starts with any of the filters
      */
 
-    public void save(File file, String filter) {
+    public void save(File file, String... filters) {
         // log to console that the jar from memory is being saved to a file
         JProcessor.Logging.info("Saving the jar from memory to '%s'", file.getAbsolutePath());
 
@@ -280,11 +311,26 @@ public class MemoryJar {
 
             // loop through all the class nodes and write them to the stream
             classes.forEach((name, memoryClass) -> {
-                if (filter != null) {
-                    if (name.startsWith(filter)) {
-                        memoryClass.write(this, out);
+
+                // if filters were provided
+                if (filters != null) {
+
+                    // loop through all the filters
+                    for (String filter : filters) {
+
+                        // and check if the name starts with the filter
+                        if (name.startsWith(filter)) {
+
+                            // if so write the class to the output stream
+                            memoryClass.write(this, out);
+
+                            // and break out of the loop
+                            break;
+                        }
                     }
                 } else {
+
+                    // if filters were not provided just write everything to the output stream
                     memoryClass.write(this, out);
                 }
             });
@@ -313,7 +359,7 @@ public class MemoryJar {
      */
 
     public void save(File file) {
-        save(file, null);
+        save(file, (String[]) null);
     }
 
     /**
