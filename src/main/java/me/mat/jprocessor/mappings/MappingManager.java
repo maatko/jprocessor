@@ -230,19 +230,6 @@ public class MappingManager extends SimpleRemapper {
     }
 
     /**
-     * Gets a field mapping by the class and return type
-     *
-     * @param className  name of the class that the method is in
-     * @param mapping    mapping of the field that you want to get the mapping for
-     * @param returnType return type of the field that you want to get the mapping for
-     * @return {@link MethodMapping}
-     */
-
-    public FieldMapping getFieldCustom(String className, String mapping, String returnType) {
-        return fieldMappings.getOrDefault(className, new ArrayList<>()).stream().filter(fm -> fm.mapping.equals(mapping) && fm.returnType.equals(returnType)).findFirst().orElse(null);
-    }
-
-    /**
      * Gets a method mapping by the class, name and description
      *
      * @param className   name of the class that the method is in

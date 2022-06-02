@@ -1,11 +1,7 @@
 package me.mat.jprocessor.mappings.generation.generator;
 
 import lombok.Setter;
-import me.mat.jprocessor.jar.memory.MemoryJar;
-import me.mat.jprocessor.jar.memory.MemoryClass;
-import me.mat.jprocessor.jar.memory.MemoryField;
-import me.mat.jprocessor.jar.memory.MemoryLocalVariable;
-import me.mat.jprocessor.jar.memory.MemoryMethod;
+import me.mat.jprocessor.jar.memory.*;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.mappings.mapping.Mapping;
 import me.mat.jprocessor.mappings.mapping.MethodMapping;
@@ -60,28 +56,6 @@ public abstract class MappingGenerator {
 
             // map all the current class overrides
             mapOverrides(memoryClass, classMapping != null ? classMapping.mapping : className);
-        });
-
-        // map all the super fields
-        classes.forEach((className, memoryClass) -> {
-            // get the mapping for the current class
-            Mapping classMapping = mappingManager.getClass(className);
-
-            // select the current class
-            mappingManager.mapClass(className, classMapping != null ? classMapping.mapping : className);
-
-            // loop through all the super fields
-            memoryClass.superFields.forEach((superClass, fields) -> fields.forEach(memoryField -> {
-                // get the field mapping
-                Mapping mapping = mappingManager.getField(superClass.name(), memoryField.name(), memoryField.description());
-
-                // if the field is found
-                if (mapping != null) {
-
-                    // map the super field for the current class
-                    mappingManager.mapField(mapping.name, mapping.mapping, memoryField.description());
-                }
-            }));
         });
     }
 

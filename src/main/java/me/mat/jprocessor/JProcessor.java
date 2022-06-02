@@ -181,7 +181,6 @@ public class JProcessor {
          * @param generationType type of the mapping generator that you want to use
          * @param memoryJar      jar that you want to generate mappings for
          * @return {@link MappingManager}
-         * @throws MappingGenerateException
          */
 
         public static MappingManager generate(GenerationType generationType, MemoryJar memoryJar) throws MappingGenerateException {
@@ -195,7 +194,6 @@ public class JProcessor {
          * @param generator generate that you want to use to generate the mappings
          * @param memoryJar jar that you want to generate mappings for
          * @return {@link MappingManager}
-         * @throws MappingGenerateException
          */
 
         public static MappingManager generate(MappingGenerator generator, MemoryJar memoryJar) throws MappingGenerateException {
@@ -240,7 +238,6 @@ public class JProcessor {
          * @param file        file that the mappings are contained in
          * @param mappingType type of the mappings that the file is saved in
          * @return {@link MappingManager}
-         * @throws MappingLoadException
          */
 
         public static MappingManager load(MemoryJar memoryJar, File file, MappingType mappingType) throws MappingLoadException {
