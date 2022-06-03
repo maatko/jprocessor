@@ -79,10 +79,17 @@ public class MemoryJar {
         // log to console how many classes were loaded
         JProcessor.Logging.info("Loaded '%d' classes into memory", classes.size());
 
-        // if the classes pool contains the main class
-        if (classes.containsKey(mainClass)) {
+        // if the main class was not provided
+        if (mainClass == null && manifest != null) {
 
-            // update the main class flag in the target class
+            // attempt to get the main class from the manifest
+            mainClass = manifest.mainClass;
+        }
+
+        // if the main class was provided and the classes pool contains the main class
+        if (mainClass != null && classes.containsKey(mainClass)) {
+
+            // get the main class and update its is main class flag to true
             classes.get(mainClass).isMainClass = true;
         }
     }
@@ -129,7 +136,7 @@ public class MemoryJar {
         JProcessor.Logging.info("Loaded '%d' resources into memory", resources.size());
 
         // if the main class was not provided
-        if (mainClass == null) {
+        if (mainClass == null && manifest != null) {
 
             // attempt to get the main class from the manifest
             mainClass = manifest.mainClass;
