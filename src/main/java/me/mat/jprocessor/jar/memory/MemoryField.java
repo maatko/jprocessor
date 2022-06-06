@@ -3,17 +3,17 @@ package me.mat.jprocessor.jar.memory;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import me.mat.jprocessor.util.asm.ASMUtil;
+import me.mat.jprocessor.util.asm.IAccessed;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.FieldNode;
 
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
-public class MemoryField {
+public class MemoryField implements IAccessed {
 
     private final List<MemoryAnnotation> annotations = new ArrayList<>();
 
@@ -124,46 +124,6 @@ public class MemoryField {
     }
 
     /**
-     * Gets the visible annotations for the current field
-     *
-     * @return {@link List}
-     */
-
-    public List<AnnotationNode> getVisibleAnnotations() {
-        return fieldNode.visibleAnnotations;
-    }
-
-    /**
-     * Gets the invisible annotations for the current field
-     *
-     * @return {@link List}
-     */
-
-    public List<AnnotationNode> getInvisibleAnnotations() {
-        return fieldNode.invisibleAnnotations;
-    }
-
-    /**
-     * Checks if the field has final modifier
-     *
-     * @return {@link Boolean}
-     */
-
-    public boolean isFinal() {
-        return Modifier.isFinal(fieldNode.access);
-    }
-
-    /**
-     * Checks if the field has static modifier
-     *
-     * @return {@link Boolean}
-     */
-
-    public boolean isStatic() {
-        return Modifier.isStatic(fieldNode.access);
-    }
-
-    /**
      * Gets the access of the field
      *
      * @return {@link Integer}
@@ -187,7 +147,7 @@ public class MemoryField {
      * Checks if the instruction matches
      * the current field
      *
-     * @param instruction instruction that you want to check aginst
+     * @param instruction instruction that you want to check against
      * @return {@link Boolean}
      */
 

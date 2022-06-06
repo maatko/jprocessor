@@ -3,6 +3,7 @@ package me.mat.jprocessor.jar.memory;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import me.mat.jprocessor.util.asm.ASMUtil;
+import me.mat.jprocessor.util.asm.IAccessed;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodNode;
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
-public class MemoryMethod {
+public class MemoryMethod implements IAccessed {
 
     private final List<MemoryAnnotation> annotations = new ArrayList<>();
 
@@ -146,16 +147,6 @@ public class MemoryMethod {
     }
 
     /**
-     * Checks if the method is static
-     *
-     * @return {@link Boolean}
-     */
-
-    public boolean isStatic() {
-        return Modifier.isStatic(getAccess());
-    }
-
-    /**
      * Checks if the method overrides a method
      * from one of the super classes
      *
@@ -194,28 +185,6 @@ public class MemoryMethod {
 
     public String description() {
         return methodNode.desc;
-    }
-
-    /**
-     * Gets the list of visible annotations
-     * for the current method
-     *
-     * @return {@link List}
-     */
-
-    public List<AnnotationNode> getVisibleAnnotations() {
-        return methodNode.visibleAnnotations;
-    }
-
-    /**
-     * Gets the list of invisible annotations
-     * for the current method
-     *
-     * @return {@link List}
-     */
-
-    public List<AnnotationNode> getInvisibleAnnotations() {
-        return methodNode.invisibleAnnotations;
     }
 
     /**

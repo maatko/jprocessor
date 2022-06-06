@@ -273,7 +273,7 @@ public class MemoryJar {
         Map<String, byte[]> data = new HashMap<>();
 
         // loop through all the class nodes and them to the map
-        classes.forEach((name, memoryClass) -> data.put(name, memoryClass.write(this)));
+        classes.forEach((name, memoryClass) -> data.put(name, memoryClass.write()));
 
         // return the data
         return data;
@@ -329,7 +329,7 @@ public class MemoryJar {
                         if (name.startsWith(filter)) {
 
                             // if so write the class to the output stream
-                            memoryClass.write(this, out);
+                            memoryClass.write(out);
 
                             // and break out of the loop
                             break;
@@ -338,7 +338,7 @@ public class MemoryJar {
                 } else {
 
                     // if filters were not provided just write everything to the output stream
-                    memoryClass.write(this, out);
+                    memoryClass.write(out);
                 }
             });
 

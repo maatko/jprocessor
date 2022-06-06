@@ -2,6 +2,7 @@ package me.mat.jprocessor.jar.memory;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import me.mat.jprocessor.util.asm.IAccessed;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.mappings.remapper.JClassRemapper;
 import me.mat.jprocessor.transformer.ClassTransformer;
@@ -23,7 +24,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
 @RequiredArgsConstructor
-public class MemoryClass {
+public class MemoryClass implements IAccessed {
 
     public final Map<String, MemoryInnerClass> innerClasses = new HashMap<>();
 
@@ -463,14 +464,13 @@ public class MemoryClass {
     /**
      * Writes the class to the provided JarOutputStream
      *
-     * @param memoryJar    memory jar that you want to write from
      * @param outputStream stream that you want to write the class to
      */
 
-    public void write(MemoryJar memoryJar, JarOutputStream outputStream) {
+    public void write(JarOutputStream outputStream) {
         try {
             // create the class writer
-            CustomClassWriter classWriter = new CustomClassWriter(memoryJar, ClassWriter.COMPUTE_MAXS);
+            CustomClassWriter classWriter = new CustomClassWriter(ClassWriter.COMPUTE_MAXS);
 
             // load the class bytes into the class writer
             classNode.accept(classWriter);
@@ -488,13 +488,12 @@ public class MemoryClass {
     /**
      * Writes the class to a byte[]
      *
-     * @param memoryJar memory jar that you want to write from
      * @return {@link Byte[]}
      */
 
-    public byte[] write(MemoryJar memoryJar) {
+    public byte[] write() {
         // create the class writer
-        CustomClassWriter classWriter = new CustomClassWriter(memoryJar, ClassWriter.COMPUTE_MAXS);
+        CustomClassWriter classWriter = new CustomClassWriter(ClassWriter.COMPUTE_MAXS);
 
         // load the class bytes into the class writer
         classNode.accept(classWriter);
@@ -514,26 +513,6 @@ public class MemoryClass {
         return classNode.name.contains("$") && classNode.outerClass == null;
     }
 
-    /**
-     * Checks if the current class
-     * is an annotation class
-     *
-     * @return {@link Boolean}
-     */
-
-    public boolean isAnnotation() {
-        return Modifier.isInterface(classNode.access) && hasModifier(Opcodes.ACC_ANNOTATION);
-    }
-
-    /**
-     * Checks if the class is an enum
-     *
-     * @return {@link Boolean}
-     */
-
-    public boolean isEnum() {
-        return hasModifier(Opcodes.ACC_ENUM);
-    }
 
     /**
      * Returns the super class
@@ -582,33 +561,12 @@ public class MemoryClass {
     }
 
     /**
-     * Returns a list of visible annotations for
-     * the current class
-     *
-     * @return {@link List}
-     */
-
-    public List<AnnotationNode> getVisibleAnnotations() {
-        return classNode.visibleAnnotations;
-    }
-
-    /**
-     * Returns a list of invisible annotations for
-     * the current class
-     *
-     * @return {@link List}
-     */
-
-    public List<AnnotationNode> getInvisibleAnnotations() {
-        return classNode.invisibleAnnotations;
-    }
-
-    /**
      * Gets the access of the class
      *
      * @return {@link Integer}
      */
 
+    @Override
     public int getAccess() {
         return classNode.access;
     }
@@ -619,6 +577,7 @@ public class MemoryClass {
      * @param access access that you want to set it to
      */
 
+    @Override
     public void setAccess(int access) {
         classNode.access = access;
     }
@@ -664,17 +623,6 @@ public class MemoryClass {
 
         memoryClass.interfaces.forEach((className, interfaceClass) -> findSuperClasses(interfaceClass, superClasses));
         findSuperClasses(memoryClass.superClass, superClasses);
-    }
-
-    /**
-     * Checks if the class has the provided access modifier
-     *
-     * @param modifier modifier that you want to check for
-     * @return {@link Boolean}
-     */
-
-    boolean hasModifier(int modifier) {
-        return (classNode.access & modifier) != 0;
     }
 
     @Override

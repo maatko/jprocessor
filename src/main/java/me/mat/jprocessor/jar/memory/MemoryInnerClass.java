@@ -2,10 +2,11 @@ package me.mat.jprocessor.jar.memory;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import me.mat.jprocessor.util.asm.IAccessed;
 import org.objectweb.asm.tree.InnerClassNode;
 
 @RequiredArgsConstructor
-public class MemoryInnerClass {
+public class MemoryInnerClass implements IAccessed {
 
     @NonNull
     private InnerClassNode classNode;
