@@ -262,6 +262,17 @@ public class MemoryInstructions {
     }
 
     /**
+     * Returns the index of the provided instruction
+     *
+     * @param abstractInsnNode instruction that you want to get the index for
+     * @return {@link Integer}
+     */
+
+    public int indexOf(AbstractInsnNode abstractInsnNode) {
+        return instructions.indexOf(abstractInsnNode);
+    }
+
+    /**
      * Gets the last instruction in the list
      *
      * @return {@link AbstractInsnNode}
