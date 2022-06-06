@@ -2,16 +2,19 @@ package me.mat.jprocessor.jar.memory;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import me.mat.jprocessor.util.asm.IAccessed;
 import me.mat.jprocessor.mappings.MappingManager;
 import me.mat.jprocessor.mappings.remapper.JClassRemapper;
 import me.mat.jprocessor.transformer.ClassTransformer;
 import me.mat.jprocessor.transformer.FieldTransformer;
 import me.mat.jprocessor.transformer.MethodTransformer;
 import me.mat.jprocessor.util.asm.CustomClassWriter;
+import me.mat.jprocessor.util.asm.IAccessed;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.*;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.InnerClassNode;
+import org.objectweb.asm.tree.MethodNode;
 
 import java.io.IOException;
 import java.lang.reflect.Modifier;
@@ -24,7 +27,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
 @RequiredArgsConstructor
-public class MemoryClass implements IAccessed {
+public class MemoryClass extends MemoryAnnotatedElement implements IAccessed {
 
     public final Map<String, MemoryInnerClass> innerClasses = new HashMap<>();
 
@@ -37,8 +40,6 @@ public class MemoryClass implements IAccessed {
     public final List<MemoryField> fields = new ArrayList<>();
 
     public final List<MemoryMethod> methods = new ArrayList<>();
-
-    public final List<MemoryAnnotation> annotations = new ArrayList<>();
 
     @NonNull
     private ClassNode classNode;
@@ -115,26 +116,8 @@ public class MemoryClass implements IAccessed {
             innerClasses.put(innerClassNode.name, innerClass);
         });
 
-        // get the list of annotations
-        List<AnnotationNode> annotations = classNode.visibleAnnotations;
-
-        // if the list is valid
-        if (annotations != null) {
-
-            // loop through all the annotation nodes
-            annotations.forEach(annotationNode -> {
-
-                // get the class name of the annotation
-                String annotationClass = annotationNode.desc.substring(1, annotationNode.desc.length() - 1);
-
-                // if the classes pool contains the annotation class
-                if (classes.containsKey(annotationClass)) {
-
-                    // add the annotation to the annotations list
-                    this.annotations.add(new MemoryAnnotation(annotationNode, classes.get(annotationClass)));
-                }
-            });
-        }
+        // initialize all the annotations
+        this.init(classNode.visibleAnnotations, classes);
 
         // find the super class
         this.findSuperClass(classes);
@@ -279,7 +262,7 @@ public class MemoryClass implements IAccessed {
 
     /**
      * Attempts to find a field in one of the super classes
-     * starting from the this class
+     * starting from the class
      *
      * @param name           name of the field
      * @param descriptor     descriptor of the field
@@ -400,50 +383,6 @@ public class MemoryClass implements IAccessed {
             classReference.set(superClass);
             methodReference.set(memoryMethod);
         }));
-    }
-
-    /**
-     * Checks if the current class has the provided annotation
-     *
-     * @param name name of the annotation that you want to check for
-     * @return {@link Boolean}
-     */
-
-    public boolean isAnnotationPresent(String name) {
-        return getAnnotation(name) != null;
-    }
-
-    /**
-     * Checks if the current class has the provided annotation
-     *
-     * @param annotation class of the annotation that you want to check
-     * @return {@link Boolean}
-     */
-
-    public boolean isAnnotationPresent(Class<?> annotation) {
-        return isAnnotationPresent(annotation.getName().replaceAll("\\.", "/"));
-    }
-
-    /**
-     * Gets the annotation from the current class
-     *
-     * @param name name of the annotation that you want to get
-     * @return {@link MemoryAnnotation}
-     */
-
-    public MemoryAnnotation getAnnotation(String name) {
-        return annotations.stream().filter(memoryAnnotation -> memoryAnnotation.annotationClass.name().equals(name)).findFirst().orElse(null);
-    }
-
-    /**
-     * Gets the annotation from the current class
-     *
-     * @param annotation class of the annotation that you want to get
-     * @return {@link MemoryAnnotation}
-     */
-
-    public MemoryAnnotation getAnnotation(Class<?> annotation) {
-        return getAnnotation(annotation.getName().replaceAll("\\.", "/"));
     }
 
     /**

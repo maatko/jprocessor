@@ -4,19 +4,15 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import me.mat.jprocessor.util.asm.ASMUtil;
 import me.mat.jprocessor.util.asm.IAccessed;
-import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodNode;
 
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
-public class MemoryMethod implements IAccessed {
-
-    private final List<MemoryAnnotation> annotations = new ArrayList<>();
+public class MemoryMethod extends MemoryAnnotatedElement implements IAccessed {
 
     public final List<MemoryLocalVariable> localVariables = new ArrayList<>();
 
@@ -42,29 +38,8 @@ public class MemoryMethod implements IAccessed {
         // define new memory instructions for the current method
         this.instructions = new MemoryInstructions(this, methodNode.instructions);
 
-        // clear all the annotations
-        this.annotations.clear();
-
-        // get the list of annotations
-        List<AnnotationNode> annotations = methodNode.visibleAnnotations;
-
-        // if the list is valid
-        if (annotations != null) {
-
-            // loop through all the annotation nodes
-            annotations.forEach(annotationNode -> {
-
-                // get the class name of the annotation
-                String annotationClass = annotationNode.desc.substring(1, annotationNode.desc.length() - 1);
-
-                // if the classes pool contains the annotation class
-                if (classes.containsKey(annotationClass)) {
-
-                    // add the annotation to the annotations list
-                    this.annotations.add(new MemoryAnnotation(annotationNode, classes.get(annotationClass)));
-                }
-            });
-        }
+        // initialize all the annotations
+        this.init(methodNode.visibleAnnotations, classes);
 
         // if the local variables are valid
         if (methodNode.localVariables != null) {
@@ -90,50 +65,6 @@ public class MemoryMethod implements IAccessed {
             this.baseClass = baseClass;
             this.baseMethod = baseMethod;
         }
-    }
-
-    /**
-     * Checks if the current method has the provided annotation
-     *
-     * @param name name of the annotation that you want to check for
-     * @return {@link Boolean}
-     */
-
-    public boolean isAnnotationPresent(String name) {
-        return getAnnotation(name) != null;
-    }
-
-    /**
-     * Checks if the current method has the provided annotation
-     *
-     * @param annotation class of the annotation that you want to check
-     * @return {@link Boolean}
-     */
-
-    public boolean isAnnotationPresent(Class<?> annotation) {
-        return isAnnotationPresent(annotation.getName().replaceAll("\\.", "/"));
-    }
-
-    /**
-     * Gets the annotation from the current method
-     *
-     * @param name name of the annotation that you want to get
-     * @return {@link MemoryAnnotation}
-     */
-
-    public MemoryAnnotation getAnnotation(String name) {
-        return annotations.stream().filter(memoryAnnotation -> memoryAnnotation.annotationClass.name().equals(name)).findFirst().orElse(null);
-    }
-
-    /**
-     * Gets the annotation from the current method
-     *
-     * @param annotation class of the annotation that you want to get
-     * @return {@link MemoryAnnotation}
-     */
-
-    public MemoryAnnotation getAnnotation(Class<?> annotation) {
-        return getAnnotation(annotation.getName().replaceAll("\\.", "/"));
     }
 
     /**
