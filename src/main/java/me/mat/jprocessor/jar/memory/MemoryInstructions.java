@@ -64,8 +64,18 @@ public class MemoryInstructions {
      */
 
     private LabelNode findLabel(AbstractInsnNode instruction) {
+        // get the index of the instruction
+        int index = indexOf(instruction);
+
+        // if the index is not found
+        if (index == -1) {
+
+            // return null
+            return null;
+        }
+
         // loop from the instruction backwards
-        for (int i = indexOf(instruction); i > 0; i--) {
+        for (int i = index; i > 0; i--) {
 
             // get the abstract node
             AbstractInsnNode abstractInsnNode = get(i);
