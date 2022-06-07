@@ -311,7 +311,7 @@ public class MemoryInstructions {
         }
 
         // setup the label lookup table
-        setupLabelLookupTable();
+        instructions.setupLabelLookupTable();
     }
 
     /**
@@ -337,7 +337,7 @@ public class MemoryInstructions {
         }
 
         // setup the label lookup table
-        setupLabelLookupTable();
+        instructions.setupLabelLookupTable();
     }
 
     /**
