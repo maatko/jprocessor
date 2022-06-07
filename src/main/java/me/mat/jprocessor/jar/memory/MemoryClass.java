@@ -17,7 +17,6 @@ import org.objectweb.asm.tree.InnerClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.io.IOException;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -71,17 +70,10 @@ public class MemoryClass extends MemoryAnnotatedElement implements IAccessed {
         outerClass = classes.get(classNode.outerClass);
 
         // load all the fields into the memory
-        classNode.fields.forEach(fieldNode -> {
-            if (Modifier.isPrivate(fieldNode.access)) {
-                fieldNode.access -= Opcodes.ACC_PRIVATE;
-                fieldNode.access += Opcodes.ACC_PUBLIC;
-            }
-            fields.add(new MemoryField(this, fieldNode).init(classes));
-        });
+        classNode.fields.forEach(fieldNode -> fields.add(new MemoryField(this, fieldNode).init(classes)));
 
         // load all the methods into the memory
-        classNode.methods.forEach(methodNode
-                -> methods.add(new MemoryMethod(this, methodNode).init(classes)));
+        classNode.methods.forEach(methodNode -> methods.add(new MemoryMethod(this, methodNode).init(classes)));
 
         // find all the extended interfaces
         List<String> interfaces = classNode.interfaces;
