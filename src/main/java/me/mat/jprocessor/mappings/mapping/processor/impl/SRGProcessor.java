@@ -30,7 +30,7 @@ public class SRGProcessor implements MappingProcessor {
             case PACKAGE:
                 break;
             case CLASS:
-                mappingManager.mapClass(data[1], data[0]);
+                mappingManager.mapClass(data[0], data[1]);
                 break;
             case FIELD:
                 String className = data[0].substring(0, data[0].lastIndexOf("/"));
