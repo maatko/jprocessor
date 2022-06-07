@@ -1,18 +1,85 @@
 package me.mat.jprocessor.jar.memory;
 
-import lombok.RequiredArgsConstructor;
+import lombok.NonNull;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
-@RequiredArgsConstructor
+import java.util.HashMap;
+import java.util.Map;
+
 public class MemoryInstructions {
+
+    private final Map<AbstractInsnNode, LabelNode> labelLookupTable = new HashMap<>();
 
     private final MemoryMethod memoryMethod;
 
+    @NonNull
     private final InsnList instructions;
+
+    public MemoryInstructions(MemoryMethod memoryMethod, InsnList instructions) {
+        this.memoryMethod = memoryMethod;
+        this.instructions = instructions;
+
+        // setup the lookup table
+        this.setupLabelLookupTable();
+    }
 
     public MemoryInstructions() {
         this(null, new InsnList());
+    }
+
+    /**
+     * Sets up the label lookup table with the correct labels
+     */
+
+    private void setupLabelLookupTable() {
+        // clear the lookup table
+        labelLookupTable.clear();
+
+        // loop through all the instructions
+        instructions.forEach(instruction -> {
+
+            // if the instruction is not a label instruction
+            if (!(instruction instanceof LabelNode)) {
+
+                // find the label node that the instruction is in
+                LabelNode labelNode = findLabel(instruction);
+
+                // if the label node was found
+                if (labelNode != null) {
+
+                    // cache it to the lookup table
+                    labelLookupTable.put(instruction, labelNode);
+                }
+            }
+        });
+    }
+
+    /**
+     * Finds a label node for the
+     * provided instruction
+     *
+     * @param instruction instruction that you want to get the label node for
+     * @return {@link LabelNode}
+     */
+
+    private LabelNode findLabel(AbstractInsnNode instruction) {
+        // loop from the instruction backwards
+        for (int i = indexOf(instruction); i > 0; i--) {
+
+            // get the abstract node
+            AbstractInsnNode abstractInsnNode = get(i);
+
+            // if the instruction is a label node
+            if (abstractInsnNode instanceof LabelNode) {
+
+                // return it
+                return (LabelNode) abstractInsnNode;
+            }
+        }
+
+        // else return null
+        return null;
     }
 
     /**
@@ -108,7 +175,11 @@ public class MemoryInstructions {
      */
 
     public void add(AbstractInsnNode instruction) {
+        // add the instruction
         instructions.add(instruction);
+
+        // and setup the label lookup table
+        setupLabelLookupTable();
     }
 
     /**
@@ -118,7 +189,11 @@ public class MemoryInstructions {
      */
 
     public void add(MemoryInstructions instructions) {
+        // add the instruction list
         instructions.addInto(this, false);
+
+        // and setup the label lookup table
+        setupLabelLookupTable();
     }
 
     /**
@@ -128,7 +203,11 @@ public class MemoryInstructions {
      */
 
     public void insert(AbstractInsnNode instruction) {
+        // insert the instruction
         instructions.insert(instruction);
+
+        // and setup the label lookup table
+        setupLabelLookupTable();
     }
 
     /**
@@ -149,7 +228,11 @@ public class MemoryInstructions {
      */
 
     public void insertAfter(AbstractInsnNode targetInstruction, AbstractInsnNode instruction) {
+        // insert the instruction
         instructions.insert(targetInstruction, instruction);
+
+        // setup the lookup table
+        setupLabelLookupTable();
     }
 
     /**
@@ -160,7 +243,11 @@ public class MemoryInstructions {
      */
 
     public void insertAfter(AbstractInsnNode targetInstruction, MemoryInstructions instructions) {
+        // insert the instructions
         this.instructions.insert(targetInstruction, instructions.instructions);
+
+        // setup the lookup table
+        setupLabelLookupTable();
     }
 
     /**
@@ -171,7 +258,11 @@ public class MemoryInstructions {
      */
 
     public void insertBefore(AbstractInsnNode targetInstruction, AbstractInsnNode instruction) {
+        // insert the instruction
         instructions.insertBefore(targetInstruction, instruction);
+
+        // setup the lookup table
+        setupLabelLookupTable();
     }
 
     /**
@@ -182,7 +273,11 @@ public class MemoryInstructions {
      */
 
     public void insertBefore(AbstractInsnNode targetInstruction, MemoryInstructions instructions) {
+        // insert the instructions
         this.instructions.insertBefore(targetInstruction, instructions.instructions);
+
+        // setup the lookup table
+        setupLabelLookupTable();
     }
 
     /**
@@ -214,6 +309,9 @@ public class MemoryInstructions {
             // and copy every single instructions into the new instruction list
             instructions.instructions.add(instruction);
         }
+
+        // setup the label lookup table
+        setupLabelLookupTable();
     }
 
     /**
@@ -237,6 +335,9 @@ public class MemoryInstructions {
             // and copy every single instructions into the new instruction list
             instructions.instructions.insert(instruction);
         }
+
+        // setup the label lookup table
+        setupLabelLookupTable();
     }
 
     /**
@@ -290,6 +391,17 @@ public class MemoryInstructions {
 
     public int size() {
         return instructions.size();
+    }
+
+    /**
+     * Gets the label for the provided instruction
+     *
+     * @param instruction instruction that you want to get the label for
+     * @return {@link LabelNode}
+     */
+
+    public LabelNode getLabelForInstruction(AbstractInsnNode instruction) {
+        return labelLookupTable.getOrDefault(instruction, null);
     }
 
     /**
