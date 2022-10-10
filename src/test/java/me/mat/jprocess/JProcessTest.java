@@ -1,141 +1,34 @@
 package me.mat.jprocess;
 
-import me.mat.jprocess.util.Manifest;
-import me.mat.jprocessor.JProcessor;
-import me.mat.jprocessor.jar.memory.MemoryClass;
-import me.mat.jprocessor.jar.memory.MemoryField;
-import me.mat.jprocessor.jar.memory.MemoryJar;
-import me.mat.jprocessor.jar.memory.MemoryMethod;
-import me.mat.jprocessor.mappings.MappingLoadException;
-import me.mat.jprocessor.mappings.MappingManager;
-import me.mat.jprocessor.mappings.MappingType;
-import me.mat.jprocessor.mappings.generation.GenerationType;
-import me.mat.jprocessor.mappings.generation.MappingGenerateException;
-import me.mat.jprocessor.transformer.ClassTransformer;
+import me.mat.jprocessor.memory.MemoryJar;
 import org.junit.jupiter.api.Test;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.InsnNode;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URL;
 
 public class JProcessTest {
 
-    private static final String MANIFEST_JSON_URL = "https://launchermeta.mojang.com/v1/packages/86f9645f8398ec902cd17769058851e6fead68cf/1.18.2.json";
-
     private static final String TEST_JAR_URL = "https://github.com/sim0n/Evaluator/releases/download/1.02/Evaluator-1.0-SNAPSHOT.jar";
 
-    private static final File TESTS_DIRECTORY = new File("tests");
-    private static final File MANIFEST_JSON_FILE = new File(TESTS_DIRECTORY, "manifest.json");
-    private static final File TEST_JAR_FILE = new File(TESTS_DIRECTORY, "evaluator.jar");
-    private static final File TESTS_OUT_JAR_FILE = new File(TESTS_DIRECTORY, "evaluator_out.jar");
-    private static final File MAPPINGS_FILE = new File(TESTS_DIRECTORY, "mappings.txt");
-    private static final File MAPPINGS_OUT_FILE = new File(TESTS_DIRECTORY, "mappings_out.json");
-    private static final File MAPPINGS_TESTS_OUT_FILE = new File(TESTS_DIRECTORY, "tests_mappings_out.json");
-    private static final File CLIENT_JAR_FILE = new File(TESTS_DIRECTORY, "client.jar");
-    private static final File CLIENT_OUT_JAR_FILE = new File(TESTS_DIRECTORY, "client_out.jar");
+    private static final File EVALUATOR = new File("tests", "evaluator.jar");
 
     @Test
-    public void deObfuscate() throws FileNotFoundException, MappingLoadException {
-        // if the test directory does not exist create it
-        assert TESTS_DIRECTORY.exists() || TESTS_DIRECTORY.mkdirs();
-
-        // check for the json manifest
-        if (!MANIFEST_JSON_FILE.exists()) {
-            download(MANIFEST_JSON_URL, MANIFEST_JSON_FILE);
-        }
-
-        // load the manifest file
-        Manifest manifest = Manifest.load(MANIFEST_JSON_FILE);
-        assert manifest != null;
-
-        // if the mappings file does not exist download it
-        if (!MAPPINGS_FILE.exists()) {
-            download(manifest.downloads.mappings.url, MAPPINGS_FILE);
-        }
-
-        // if the client jar file does not exist download it
-        if (!CLIENT_JAR_FILE.exists()) {
-            download(manifest.downloads.client.url, CLIENT_JAR_FILE);
-        }
-
-        // load the jar into memory
-        MemoryJar memoryJar = JProcessor.Jar.load(CLIENT_JAR_FILE);
-
-        // load the mapping file
-        MappingManager mappingManager = JProcessor.Mapping.load(memoryJar, MAPPINGS_FILE, MappingType.PROGUARD);
-
-        // remap the jar
-        memoryJar.remap(mappingManager);
-
-        // save the jar to the disk
-        memoryJar.save(CLIENT_OUT_JAR_FILE);
-
-        // save the mappings to a file
-        mappingManager.save(MAPPINGS_OUT_FILE);
+    public void test() {
+        MemoryJar memoryJar = new MemoryJar(getEvaluator());
     }
 
-    @Test
-    public void obfuscate() throws FileNotFoundException {
-        // if the test directory does not exist create it
-        assert TESTS_DIRECTORY.exists() || TESTS_DIRECTORY.mkdirs();
+    private static File getEvaluator() {
+        if (!EVALUATOR.getParentFile().exists())
+            if (!EVALUATOR.getParentFile().mkdirs())
+                throw new RuntimeException("Failed to create the tests directory");
 
-        // check for the jar
-        if (!TEST_JAR_FILE.exists()) {
-            download(TEST_JAR_URL, TEST_JAR_FILE);
+        if (!EVALUATOR.exists()) {
+            download(TEST_JAR_URL, EVALUATOR);
         }
-
-        // load the jar into memory
-        MemoryJar memoryJar = JProcessor.Jar.load(TEST_JAR_FILE);
-
-        // check that the jar is loaded
-        assert memoryJar.isLoaded();
-
-        // generate the mappings for the current jar
-        MappingManager mappingManager;
-        try {
-            mappingManager = JProcessor.Mapping.generate(GenerationType.RANDOM, memoryJar);
-        } catch (MappingGenerateException e) {
-            throw new RuntimeException(e);
-        }
-
-        // remap the jar with the generated mappings
-        memoryJar.remap(mappingManager);
-
-        // inject a test class into the jar
-        MemoryClass cls = memoryJar.createClass(
-                Opcodes.V1_8, Opcodes.ACC_PUBLIC, "me/mat/jprocessor/TestClass",
-                null, null, null
-        );
-
-        MemoryMethod method = cls.addMethod(
-                Opcodes.ACC_PRIVATE,
-                "testMethod",
-                "()V",
-                null,
-                null
-        ).init(memoryJar.getClasses());
-
-        MemoryMethod caller = cls.addMethod(
-                Opcodes.ACC_PRIVATE,
-                "<init>",
-                "()V",
-                null,
-                null
-        ).init(memoryJar.getClasses());
-
-        // add the invoke instruction
-        caller.instructions.addInvoke(method);
-        caller.instructions.add(new InsnNode(Opcodes.RETURN));
-
-        // transform the class
-        cls.transform(new TestClassTransformer());
-
-        // save the jar to the output file
-        memoryJar.save(TESTS_OUT_JAR_FILE);
-
-        // save the mappings
-        mappingManager.save(MAPPINGS_TESTS_OUT_FILE);
+        return EVALUATOR;
     }
 
     /**
@@ -156,25 +49,6 @@ public class JProcessTest {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static final class TestClassTransformer implements ClassTransformer {
-
-        @Override
-        public void transform(MemoryClass memoryClass) {
-
-        }
-
-        @Override
-        public void transform(MemoryClass memoryClass, MemoryField memoryField) {
-
-        }
-
-        @Override
-        public void transform(MemoryClass memoryClass, MemoryMethod memoryMethod) {
-
-        }
-
     }
 
 }
