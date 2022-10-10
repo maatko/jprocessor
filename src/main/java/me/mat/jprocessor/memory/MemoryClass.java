@@ -3,14 +3,18 @@ package me.mat.jprocessor.memory;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
 
 @RequiredArgsConstructor
 public class MemoryClass {
@@ -24,9 +28,42 @@ public class MemoryClass {
     private final ClassNode classNode;
 
     public MemoryClass superClass;
+    public boolean isMainClass;
 
     public MemoryClass(byte[] data) {
         this(getClassNode(data));
+    }
+
+    /**
+     * Writes the class data into a {@link JarOutputStream}
+     *
+     * @param className       name of the class that you want to write
+     * @param jarOutputStream {@link JarOutputStream} that you want to write to
+     */
+
+    public void writeBytes(String className, JarOutputStream jarOutputStream) throws IOException {
+        // put the new jar entry into the output stream
+        jarOutputStream.putNextEntry(new JarEntry(className + ".class"));
+
+        // write the class bytes to the stream
+        jarOutputStream.write(getBytes());
+    }
+
+    /**
+     * Gets the byte data from the class
+     *
+     * @return array of {@link Byte} containing the data of the class
+     */
+
+    public byte[] getBytes() {
+        // create the class writer
+        ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+
+        // write the class node to the class writer
+        classNode.accept(classWriter);
+
+        // return the byte data from the class writer
+        return classWriter.toByteArray();
     }
 
     /**

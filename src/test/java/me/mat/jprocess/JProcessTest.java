@@ -18,6 +18,7 @@ public class JProcessTest {
     @Test
     public void test() {
         MemoryJar memoryJar = new MemoryJar(getEvaluator());
+        memoryJar.save(new File("tests/evaluator-out.jar"));
     }
 
     private static File getEvaluator() {
